@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace StegoLib.Models
 {
-    internal class StegoResult
+    public class StegoResult
     {
     }
 }

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace StegoLib.Utilities
+namespace StegoApolloUI.Presenters
 {
-    public class ImageHelper
+    internal class MainPresenter
     {
     }
 }

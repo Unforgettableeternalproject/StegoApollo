@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace StegoLib.Services
 {
-    internal interface IStegoService
+    public interface IStegoService
     {
         StegoResult Embed(Bitmap coverImage, string message);
         StegoResult Extract(Bitmap stegoImage);
