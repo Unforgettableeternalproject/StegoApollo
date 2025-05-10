@@ -20,11 +20,11 @@ namespace StegoLib.Services
             _quantStep = quantStep;
         }
 
-        public StegoResult Embed(Bitmap coverImage, string message, IProgress<int> progress=null)
+        public StegoResult Embed(Bitmap coverImage, string message, IProgress<int> progress = null)
         {
             try
             {
-                // 1) 封裝訊息長度 + 內容，跟 LSB 程式類似
+                // 1) 封裝訊息長度 + 內容
                 var payload = PreparePayload(message);
 
                 Bitmap bmp = new Bitmap(coverImage);
@@ -37,15 +37,28 @@ namespace StegoLib.Services
                         Color px = bmp.GetPixel(x, y);
                         int gray = (px.R + px.G + px.B) / 3;
 
-                        int bit = (payload[bitIdx / 8] >> (7 - (bitIdx % 8))) & 1;
-                        // QIM: 如果 bit=0，量化到最近的偶數格；bit=1，量化到最近的奇數格
-                        int qBase = (gray / _quantStep) * _quantStep;
-                        int qEven = qBase;
-                        int qOdd = qBase + _quantStep / 2;
+                        int payloadByte = payload[bitIdx / 8];
+                        int bit = (payloadByte >> (7 - (bitIdx % 8))) & 1;
 
-                        int newGray = (Math.Abs(gray - qEven) <= Math.Abs(gray - qOdd))
-                                      ? (bit == 0 ? qEven : qOdd)
-                                      : (bit == 0 ? qOdd : qEven);
+                        // QIM: 如果 bit=0，量化到最近的偶數格；bit=1，量化到最近的奇數格
+                        int qStep = _quantStep;
+                        int qIndex = gray / qStep;
+
+                        // 確保量化後會在0-255範圍內
+                        int newGray;
+                        if (bit == 0)
+                        {
+                            // 嵌入0：使用2k格
+                            newGray = qIndex * qStep;
+                        }
+                        else
+                        {
+                            // 嵌入1：使用2k+1格
+                            newGray = qIndex * qStep + qStep / 2;
+                        }
+
+                        // 確保灰階值在有效範圍內
+                        newGray = Math.Max(0, Math.Min(255, newGray));
 
                         var newColor = Color.FromArgb(px.A, newGray, newGray, newGray);
                         bmp.SetPixel(x, y, newColor);
@@ -53,7 +66,8 @@ namespace StegoLib.Services
                         bitIdx++;
                     }
                     // 更新進度
-                    progress?.Report((int)((double)bitIdx / totalBits * 100));
+                    if (progress != null)
+                        progress.Report((int)((double)bitIdx / totalBits * 100));
                 }
 
                 Console.WriteLine($"嵌入完成，總共嵌入 {totalBits} bits 的訊息。");
@@ -70,55 +84,63 @@ namespace StegoLib.Services
             try
             {
                 int w = stegoImage.Width, h = stegoImage.Height;
-                int bitIdx = 0;
 
                 // 1) 提取訊息長度 (Header)
                 byte[] header = new byte[4];
-                for (int y = 0; y < h && bitIdx < header.Length * 8; y++)
+                for (int i = 0; i < 32; i++) // 4 bytes = 32 bits
                 {
-                    for (int x = 0; x < w && bitIdx < header.Length * 8; x++)
-                    {
-                        Color px = stegoImage.GetPixel(x, y);
-                        int gray = (px.R + px.G + px.B) / 3;
+                    int y = i / w;
+                    int x = i % w;
 
-                        // 判斷灰階值落在偶數格 (0) 還是奇數格 (1)
-                        int bit = (gray % _quantStep) >= (_quantStep / 2) ? 1 : 0;
+                    if (y >= h)
+                        throw new Exception("圖像尺寸不足，無法提取完整訊息");
 
-                        // 將提取的 bit 填入 header
-                        header[bitIdx / 8] = (byte)((header[bitIdx / 8] << 1) | bit);
-                        bitIdx++;
-                    }
+                    Color px = stegoImage.GetPixel(x, y);
+                    int gray = (px.R + px.G + px.B) / 3;
+
+                    // 判斷灰階值是在偶數格(0)還是奇數格(1)
+                    int mod = gray % _quantStep;
+                    int bit = (mod >= _quantStep / 4 && mod < _quantStep * 3 / 4) ? 1 : 0;
+
+                    // 將位元放入對應的header位置
+                    int byteIdx = i / 8;
+                    int bitPos = 7 - (i % 8);
+                    header[byteIdx] |= (byte)(bit << bitPos);
                 }
 
                 // 2) 解析訊息長度
                 int msgLen = BitConverter.ToInt32(header, 0);
-                if (msgLen <= 0)
-                    throw new Exception("無效的訊息長度。");
+
+                // 驗證長度合理性
+                if (msgLen <= 0 || msgLen > (w * h - 4))
+                    throw new Exception($"無效的訊息長度: {msgLen}");
 
                 // 3) 提取訊息內容
                 byte[] msgBytes = new byte[msgLen];
-                bitIdx = 0;
-                for (int y = 0; y < h && bitIdx < msgLen * 8; y++)
+                for (int i = 0; i < msgLen * 8; i++)
                 {
-                    for (int x = 0; x < w && bitIdx < msgLen * 8; x++)
-                    {
-                        // 跳過已經讀取 header 的像素
-                        if (y * w + x < Math.Ceiling((double)(header.Length * 8) / (w * h)))
-                            continue;
+                    int fullIndex = i + 32; // 跳過32位元的header
+                    int y = fullIndex / w;
+                    int x = fullIndex % w;
 
-                        Color px = stegoImage.GetPixel(x, y);
-                        int gray = (px.R + px.G + px.B) / 3;
+                    if (y >= h)
+                        throw new Exception("圖像尺寸不足，無法提取完整訊息");
 
-                        // 判斷灰階值落在偶數格 (0) 還是奇數格 (1)
-                        int bit = (gray % _quantStep) >= (_quantStep / 2) ? 1 : 0;
+                    Color px = stegoImage.GetPixel(x, y);
+                    int gray = (px.R + px.G + px.B) / 3;
 
-                        // 將提取的 bit 填入訊息內容
-                        msgBytes[bitIdx / 8] = (byte)((msgBytes[bitIdx / 8] << 1) | bit);
-                        bitIdx++;
+                    // 判斷灰階值是在偶數格(0)還是奇數格(1)
+                    int mod = gray % _quantStep;
+                    int bit = (mod >= _quantStep / 4 && mod < _quantStep * 3 / 4) ? 1 : 0;
 
-                        // 更新進度
-                        progress?.Report((int)((double)bitIdx / (msgLen * 8) * 100));
-                    }
+                    // 將位元放入對應的訊息位置
+                    int byteIdx = i / 8;
+                    int bitPos = 7 - (i % 8);
+                    msgBytes[byteIdx] |= (byte)(bit << bitPos);
+
+                    // 更新進度
+                    if (progress != null && i % 100 == 0)
+                        progress.Report((int)((double)i / (msgLen * 8) * 100));
                 }
 
                 // 4) 將訊息內容轉換為字串
@@ -132,6 +154,7 @@ namespace StegoLib.Services
                 return new StegoResult { Success = false, ErrorMessage = ex.Message };
             }
         }
+
         private byte[] PreparePayload(string message)
         {
             var msgB = Encoding.UTF8.GetBytes(message);

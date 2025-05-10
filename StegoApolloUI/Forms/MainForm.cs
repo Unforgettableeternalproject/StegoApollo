@@ -241,7 +241,7 @@ namespace StegoApolloUI
                 DialogResult f = MessageBox.Show("變更演算法會被迫拋棄目前的進度，確認嗎?", "變更演算法", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (f == DialogResult.No)
                 {
-                    cBox_AlgoSelect.SelectedIndex = cBox_AlgoSelect.Items.IndexOf(currentMode);
+                    cBox_AlgoSelect.SelectedIndex = 0; // 這裡可能要再處理一下
                     return;
                 }
             }
@@ -257,6 +257,14 @@ namespace StegoApolloUI
 
             // 取得選擇的演算法
             string selectedAlgorithm = cBox_AlgoSelect.SelectedItem.ToString();
+
+            if(selectedAlgorithm == "DCT 演算法")
+            {
+                MessageBox.Show("DCT 演算法尚未實作!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                cBox_AlgoSelect.SelectedIndex = 0; // 重設為 LSB 演算法
+                return;
+            }
+
             AlgorithmChanged?.Invoke(this, new AlgorithmChangedEventArgs(selectedAlgorithm));
         }
 
