@@ -1,11 +1,26 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35527.113 d17.12
+VisualStudioVersion = 17.12.35527.113
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StegoApolloUI", "StegoApolloUI\StegoApolloUI.csproj", "{CD56A4D3-C648-42E6-9765-37240B876098}"
+	ProjectSection(ProjectDependencies) = postProject
+		{55A2687E-A839-4671-81F8-57E9B589FA45} = {55A2687E-A839-4671-81F8-57E9B589FA45}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StegoLib", "StegoLib\StegoLib.csproj", "{55A2687E-A839-4671-81F8-57E9B589FA45}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "方案項目", "方案項目", "{2A7B79E0-9C19-4326-B9A4-B6216D8978D6}"
+	ProjectSection(SolutionItems) = preProject
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Concept Arts", "Concept Arts", "{9642F84D-8B6A-4E23-A116-C72B651F6B6D}"
+	ProjectSection(SolutionItems) = preProject
+		StegoApollo ConceptArt.png = StegoApollo ConceptArt.png
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,5 +39,11 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9642F84D-8B6A-4E23-A116-C72B651F6B6D} = {2A7B79E0-9C19-4326-B9A4-B6216D8978D6}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7E160BD3-529B-41A1-AF59-07A78E64F264}
 	EndGlobalSection
 EndGlobal
