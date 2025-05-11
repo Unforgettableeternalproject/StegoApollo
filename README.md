@@ -18,19 +18,19 @@ StegoApollo is a Windows Forms application for hiding and extracting messages wi
 
 **Initial Screen**:
 
-![Screenshot](StegoApolloUI/Screenshots/001.png))
+![Screenshot](StegoApolloUI/Screenshots/001.png)
 
 **Embedding Process (With Log Screen and Explanation Screen)**:
 
-![Screenshot](StegoApolloUI/Screenshots/002.png))
+![Screenshot](StegoApolloUI/Screenshots/002.png)
 
 **Histogram Visualization**:
 
-![Screenshot](StegoApolloUI/Screenshots/003.png))
+![Screenshot](StegoApolloUI/Screenshots/003.png)
 
 **Extraction Process**:
 
-![Screenshot](StegoApolloUI/Screenshots/004.png))
+![Screenshot](StegoApolloUI/Screenshots/004.png)
 
 ## Installation
 
