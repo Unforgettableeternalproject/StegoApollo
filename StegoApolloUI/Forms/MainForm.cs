@@ -86,7 +86,7 @@ namespace StegoApolloUI
 
         private void InitAlgorithmSelector()
         {
-            cBox_AlgoSelect.Items.AddRange(new string[] { "LSB 演算法", "DCT 演算法", "QIM 演算法" });
+            cBox_AlgoSelect.Items.AddRange(new string[] { "LSB 演算法", "QIM 演算法" }); // 放棄DCT
             cBox_AlgoSelect.SelectedIndex = 0; // 預設選擇第一個演算法
         }
 
@@ -257,13 +257,6 @@ namespace StegoApolloUI
 
             // 取得選擇的演算法
             string selectedAlgorithm = cBox_AlgoSelect.SelectedItem.ToString();
-
-            if (selectedAlgorithm == "DCT 演算法")
-            {
-                MessageBox.Show("DCT 演算法尚未實作!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                cBox_AlgoSelect.SelectedIndex = 0; // 重設為 LSB 演算法
-                return;
-            }
 
             AlgorithmChanged?.Invoke(this, new AlgorithmChangedEventArgs(selectedAlgorithm));
         }

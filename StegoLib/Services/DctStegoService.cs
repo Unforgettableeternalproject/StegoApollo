@@ -1,7 +1,6 @@
-﻿using System;
+﻿// StegoLib/Services/DctStegoService.cs
+using System;
 using System.Drawing;
-using System.Drawing.Imaging;
-using System.Linq;
 using System.Text;
 using StegoLib.Models;
 using StegoLib.Utilities;
@@ -9,170 +8,112 @@ using StegoLib.Utilities;
 namespace StegoLib.Services
 {
     /// <summary>
-    /// 彩色圖片的DCT影像域藏密法：在RGB三個通道的8x8 Block的中頻DCT係數中嵌入訊息
+    /// DCT 頻域藏密：使用 Quantization Index Modulation (QIM) 技術
+    /// 在 8x8 Block 的特定中頻係數中嵌入／提取訊息，支援彩色通道
     /// </summary>
     public class DctStegoService : IStegoService
     {
-        private readonly int _coefIndex;
-        private readonly bool _useAllChannels;
-        private readonly int _channelIndex; // 0=R, 1=G, 2=B，當_useAllChannels=false時使用
+        private readonly int _delta;    // 量化步階 Δ
+        private readonly int _coefIndex; // 要操作的 DCT 係數索引 (1~63)
 
-        public DctStegoService(int coefIndex = 10, bool useAllChannels = true, int channelIndex = 2)
+        public DctStegoService(int delta = 16, int coefIndex = 10)
         {
-            if (coefIndex < 1 || coefIndex > 63)
-                throw new ArgumentOutOfRangeException(nameof(coefIndex), "係數索引必須在1-63間");
-
-            if (!useAllChannels && (channelIndex < 0 || channelIndex > 2))
-                throw new ArgumentOutOfRangeException(nameof(channelIndex), "通道索引必須為0(R)、1(G)或2(B)");
-
-            _coefIndex = coefIndex; // 1~63 建議使用中頻係數
-            _useAllChannels = useAllChannels;
-            _channelIndex = channelIndex;
+            if (delta <= 0) throw new ArgumentOutOfRangeException(nameof(delta));
+            if (coefIndex < 1 || coefIndex > 63) throw new ArgumentOutOfRangeException(nameof(coefIndex));
+            _delta = delta;
+            _coefIndex = coefIndex;
         }
 
         public StegoResult Embed(Bitmap coverImage, string message, IProgress<int> progress = null)
         {
             try
             {
-                // 打包訊息：長度+內容
-                var payload = PreparePayload(message);
-                int w = coverImage.Width, h = coverImage.Height;
+                // 使用一個固定的種子加鹽增強穩定性
+                byte[] msgBytes = Encoding.UTF8.GetBytes(message);
+                byte[] lenBytes = BitConverter.GetBytes(msgBytes.Length);
+                byte[] payload = new byte[lenBytes.Length + msgBytes.Length];
+                Array.Copy(lenBytes, payload, lenBytes.Length);
+                Array.Copy(msgBytes, 0, payload, lenBytes.Length, msgBytes.Length);
+                int totalBits = payload.Length * 8;
 
-                // 計算可嵌入的容量
-                int channelCount = _useAllChannels ? 3 : 1;
-                int totalBlocks = (w / 8) * (h / 8) * channelCount;
+                int width = coverImage.Width;
+                int height = coverImage.Height;
+                int blocksX = width / 8;
+                int blocksY = height / 8;
+                int u = _coefIndex / 8;
+                int v = _coefIndex % 8;
+                int bitIndex = 0;
 
-                Console.WriteLine($"圖片大小: {w}x{h}，總區塊數: {(w / 8) * (h / 8)}，使用通道數: {channelCount}");
-                Console.WriteLine($"總可用區塊: {totalBlocks}，訊息大小: {payload.Length} 字節，需要 {payload.Length * 8} 位元");
+                // 拷貝原始圖像，避免直接修改原圖
+                Bitmap stegoImage = new Bitmap(coverImage);
 
-                if (totalBlocks < payload.Length * 8)
-                    return new StegoResult { Success = false, ErrorMessage = $"圖片大小不足以嵌入完整訊息，需要{payload.Length * 8}位元，但只有{totalBlocks}可用區塊" };
-
-                // 建立影像副本
-                var bmp = new Bitmap(coverImage);
-
-                // 鎖定圖片位元資料進行操作
-                BitmapData bmpData = bmp.LockBits(
-                    new Rectangle(0, 0, w, h),
-                    ImageLockMode.ReadWrite,
-                    PixelFormat.Format24bppRgb); // 確保使用24位元RGB格式
-
-                int stride = bmpData.Stride;
-                int bytesPerPixel = 3; // RGB各佔一字節
-                IntPtr scan0 = bmpData.Scan0;
-
-                // 分配暫存 RGB 通道資料
-                byte[][,] channels = new byte[3][,];
-                for (int c = 0; c < 3; c++)
+                // 分別處理 R, G, B 三個通道
+                for (int channel = 0; channel < 3 && bitIndex < totalBits; channel++)
                 {
-                    channels[c] = new byte[h, w];
-                }
-
-                // 讀取原始RGB資料
-                unsafe
-                {
-                    byte* p = (byte*)(void*)scan0;
-
-                    for (int y = 0; y < h; y++)
-                    {
-                        for (int x = 0; x < w; x++)
+                    // 建立通道矩陣
+                    double[,] mat = new double[height, width];
+                    for (int y = 0; y < height; y++)
+                        for (int x = 0; x < width; x++)
                         {
-                            int idx = y * stride + x * bytesPerPixel;
-                            channels[2][y, x] = p[idx];     // B
-                            channels[1][y, x] = p[idx + 1]; // G
-                            channels[0][y, x] = p[idx + 2]; // R
+                            Color p = stegoImage.GetPixel(x, y);
+                            mat[y, x] = channel == 0 ? p.R : channel == 1 ? p.G : p.B;
                         }
-                    }
-                }
 
-                int bitIdx = 0, totalBits = payload.Length * 8;
-                int maxBlocksX = w / 8;
-                int maxBlocksY = h / 8;
-
-                // 偵錯訊息
-                Console.WriteLine($"開始嵌入訊息，長度: {BitConverter.ToInt32(payload, 0)} 字節");
-                Console.WriteLine($"前32位元組: {BitConverter.ToString(payload.Take(32).ToArray())}");
-
-                // 嵌入資料
-                for (int channel = 0; channel < 3 && bitIdx < totalBits; channel++)
-                {
-                    // 如果不使用所有通道，則只處理指定通道
-                    if (!_useAllChannels && channel != _channelIndex)
-                        continue;
-
-                    for (int by = 0; by < maxBlocksY && bitIdx < totalBits; by++)
+                    // 逐 8x8 Block 嵌入
+                    for (int by = 0; by < blocksY && bitIndex < totalBits; by++)
                     {
-                        for (int bx = 0; bx < maxBlocksX && bitIdx < totalBits; bx++)
+                        for (int bx = 0; bx < blocksX && bitIndex < totalBits; bx++)
                         {
-                            try
+                            double[,] block = DctUtils.ForwardDct(mat, bx * 8, by * 8);
+                            double cRaw = block[u, v];
+
+                            // 獲取當前要嵌入的位元
+                            int payloadBit = (payload[bitIndex / 8] >> (7 - (bitIndex % 8))) & 1;
+
+                            // 計算最接近的量化值，使其最低位與待嵌入的位元相符
+                            double quantized;
+                            if (payloadBit == 0)
                             {
-                                // 獲取當前8x8區塊
-                                double[,] block = GetDctBlock(channels[channel], bx, by);
-
-                                // 計算要嵌入的係數位置
-                                int u = _coefIndex / 8;
-                                int v = _coefIndex % 8;
-
-                                // 讀取當前位元
-                                int bytePos = bitIdx / 8;
-                                int bitPos = 7 - (bitIdx % 8);
-                                int payloadBit = (payload[bytePos] >> bitPos) & 1;
-
-                                // 調整係數
-                                double coef = block[u, v];
-                                int coefInt = (int)Math.Round(coef);
-
-                                // 根據嵌入位元調整係數的奇偶性
-                                if ((coefInt & 1) != payloadBit)
-                                {
-                                    coefInt = (coefInt % 2 == 0) ? coefInt + 1 : coefInt - 1;
-                                }
-
-                                block[u, v] = coefInt;
-
-                                // 寫回圖像資料
-                                WriteDctBlock(block, channels[channel], bx, by);
-                                bitIdx++;
+                                // 嵌入 0：找到最接近的偶數量化值
+                                int q = (int)Math.Round(cRaw / _delta);
+                                q = q % 2 == 0 ? q : q - 1;  // 確保為偶數
+                                quantized = q * _delta;
                             }
-                            catch (Exception ex)
+                            else
                             {
-                                Console.WriteLine($"處理區塊時出錯 (通道 {channel}, bx={bx}, by={by}): {ex.Message}");
-                                continue;
+                                // 嵌入 1：找到最接近的奇數量化值
+                                int q = (int)Math.Round(cRaw / _delta);
+                                q = q % 2 == 1 ? q : q + 1;  // 確保為奇數
+                                quantized = q * _delta;
                             }
+
+                            block[u, v] = quantized;
+                            DctUtils.InverseDct(block, mat, bx * 8, by * 8);
+                            bitIndex++;
+
+                            // 更新進度
+                            progress?.Report((int)(((double)bitIndex / totalBits) * 100));
                         }
-
-                        // 更新進度
-                        if (progress != null)
-                            progress.Report((int)((double)bitIdx / totalBits * 100));
                     }
-                }
 
-                // 將修改後的通道資料寫回原圖
-                unsafe
-                {
-                    byte* p = (byte*)(void*)scan0;
-
-                    for (int y = 0; y < h; y++)
-                    {
-                        for (int x = 0; x < w; x++)
+                    // 寫回通道
+                    for (int y = 0; y < height; y++)
+                        for (int x = 0; x < width; x++)
                         {
-                            int idx = y * stride + x * bytesPerPixel;
-                            p[idx] = channels[2][y, x];     // B
-                            p[idx + 1] = channels[1][y, x]; // G
-                            p[idx + 2] = channels[0][y, x]; // R
+                            Color orig = stegoImage.GetPixel(x, y);
+                            int val = (int)Math.Round(mat[y, x]);
+                            val = Math.Min(255, Math.Max(0, val));
+                            Color updated = channel == 0
+                                ? Color.FromArgb(orig.A, val, orig.G, orig.B)
+                                : channel == 1
+                                    ? Color.FromArgb(orig.A, orig.R, val, orig.B)
+                                    : Color.FromArgb(orig.A, orig.R, orig.G, val);
+                            stegoImage.SetPixel(x, y, updated);
                         }
-                    }
                 }
 
-                // 解鎖圖片資料
-                bmp.UnlockBits(bmpData);
-
-                Console.WriteLine($"嵌入完成，總共嵌入 {bitIdx} / {totalBits} bits 的訊息。");
-
-                if (bitIdx < totalBits)
-                    return new StegoResult { Success = false, ErrorMessage = $"僅成功嵌入部分訊息: {bitIdx}/{totalBits} bits" };
-
-                return new StegoResult { Success = true, Image = bmp };
+                progress?.Report(100); // 確保進度條達到 100%
+                return new StegoResult { Success = true, Image = stegoImage };
             }
             catch (Exception ex)
             {
@@ -184,305 +125,116 @@ namespace StegoLib.Services
         {
             try
             {
-                int w = stegoImage.Width, h = stegoImage.Height;
-                int maxBlocksX = w / 8;
-                int maxBlocksY = h / 8;
-                int channelCount = _useAllChannels ? 3 : 1;
+                int width = stegoImage.Width;
+                int height = stegoImage.Height;
+                int blocksX = width / 8;
+                int blocksY = height / 8;
+                int u = _coefIndex / 8;
+                int v = _coefIndex % 8;
 
-                // 鎖定圖片位元資料
-                BitmapData bmpData = stegoImage.LockBits(
-                    new Rectangle(0, 0, w, h),
-                    ImageLockMode.ReadOnly,
-                    PixelFormat.Format24bppRgb);
+                // 首先提取長度信息（32位/4字節）
+                int headerBits = 32;
+                byte[] lenBits = new byte[headerBits];
+                int bitIndex = 0;
 
-                int stride = bmpData.Stride;
-                int bytesPerPixel = 3;
-                IntPtr scan0 = bmpData.Scan0;
-
-                // 讀取RGB通道資料
-                byte[][,] channels = new byte[3][,];
-                for (int c = 0; c < 3; c++)
+                // 分通道讀取長度信息
+                for (int channel = 0; channel < 3 && bitIndex < headerBits; channel++)
                 {
-                    channels[c] = new byte[h, w];
-                }
-
-                unsafe
-                {
-                    byte* p = (byte*)(void*)scan0;
-
-                    for (int y = 0; y < h; y++)
-                    {
-                        for (int x = 0; x < w; x++)
+                    double[,] mat = new double[height, width];
+                    for (int y = 0; y < height; y++)
+                        for (int x = 0; x < width; x++)
                         {
-                            int idx = y * stride + x * bytesPerPixel;
-                            channels[2][y, x] = p[idx];     // B
-                            channels[1][y, x] = p[idx + 1]; // G
-                            channels[0][y, x] = p[idx + 2]; // R
+                            Color p = stegoImage.GetPixel(x, y);
+                            mat[y, x] = channel == 0 ? p.R : channel == 1 ? p.G : p.B;
+                        }
+
+                    for (int by = 0; by < blocksY && bitIndex < headerBits; by++)
+                    {
+                        for (int bx = 0; bx < blocksX && bitIndex < headerBits; bx++)
+                        {
+                            double[,] block = DctUtils.ForwardDct(mat, bx * 8, by * 8);
+                            int q = (int)Math.Round(block[u, v] / _delta);
+                            lenBits[bitIndex] = (byte)(q & 1);  // 直接存儲位元值
+                            bitIndex++;
+
+                            // 更新進度
+                            progress?.Report((int)(((double)bitIndex / headerBits) * 10));  // 頭部佔總進度10%
                         }
                     }
                 }
 
-                // 解鎖圖片
-                stegoImage.UnlockBits(bmpData);
-
-                // 先讀取訊息長度 (4位元組) - 需要32位元
+                // 從位元陣列重建長度值
                 byte[] lenBytes = new byte[4];
-                int bitIdx = 0;
-                StringBuilder debugHeader = new StringBuilder();
-
-                // 處理每個通道
-                for (int channel = 0; channel < 3 && bitIdx < 32; channel++)
+                for (int i = 0; i < 32; i++)
                 {
-                    // 如果不使用所有通道，則只處理指定通道
-                    if (!_useAllChannels && channel != _channelIndex)
-                        continue;
-
-                    for (int by = 0; by < maxBlocksY && bitIdx < 32; by++)
-                    {
-                        for (int bx = 0; bx < maxBlocksX && bitIdx < 32; bx++)
-                        {
-                            try
-                            {
-                                // 計算DCT變換
-                                double[,] block = GetDctBlock(channels[channel], bx, by);
-
-                                // 讀取嵌入的係數
-                                int u = _coefIndex / 8;
-                                int v = _coefIndex % 8;
-                                int coefInt = (int)Math.Round(block[u, v]);
-                                int bit = coefInt & 1; // 取最低位
-
-                                // 記錄位元用於debug
-                                debugHeader.Append(bit);
-
-                                // 寫入對應位置
-                                int byteIdx = bitIdx / 8;
-                                int bitPos = 7 - (bitIdx % 8);
-                                lenBytes[byteIdx] |= (byte)(bit << bitPos);
-
-                                bitIdx++;
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine($"讀取長度時出錯 (通道 {channel}, bx={bx}, by={by}): {ex.Message}");
-                                continue;
-                            }
-                        }
-                    }
+                    int byteIndex = i / 8;
+                    int bitPos = 7 - (i % 8);
+                    lenBytes[byteIndex] |= (byte)(lenBits[i] << bitPos);
                 }
 
-                // 確認讀取到完整的長度資訊
-                if (bitIdx < 32)
-                    throw new Exception("無法讀取完整的訊息長度資訊");
-
-                // 解析訊息長度
                 int msgLen = BitConverter.ToInt32(lenBytes, 0);
-                Console.WriteLine($"讀取到的header位元: {debugHeader}");
-                Console.WriteLine($"解析出的訊息長度: {msgLen} 字節");
-
-                // 檢查長度合理性
-                int maxPossibleMsgLen = (maxBlocksX * maxBlocksY * channelCount - 4) / 8;
-                if (msgLen <= 0 || msgLen > maxPossibleMsgLen)
-                    throw new Exception($"解析到無效的訊息長度: {msgLen}，最大可能長度: {maxPossibleMsgLen}");
-
-                // 讀取訊息內容
-                byte[] msgBytes = new byte[msgLen];
-                int msgBitIdx = 0;
-                int totalMsgBits = msgLen * 8;
-
-                // 繼續從剛才讀取位置開始抽取訊息
-                for (int channel = 0; channel < 3 && msgBitIdx < totalMsgBits; channel++)
+                if (msgLen <= 0 || msgLen > (width * height * 3) / 64)  // 更合理的上限檢查
                 {
-                    if (!_useAllChannels && channel != _channelIndex)
-                        continue;
+                    return new StegoResult { Success = false, ErrorMessage = $"解析到無效的訊息長度: {msgLen}" };
+                }
 
-                    for (int by = 0; by < maxBlocksY && msgBitIdx < totalMsgBits; by++)
-                    {
-                        for (int bx = 0; bx < maxBlocksX && msgBitIdx < totalMsgBits; bx++)
+                // 提取消息內容
+                byte[] msgBytes = new byte[msgLen];
+                int totalBits = headerBits + (msgLen * 8);
+                byte[] msgBits = new byte[msgLen * 8];
+                int msgBitIndex = 0;
+
+                // 繼續提取消息位元
+                for (int channel = 0; channel < 3 && bitIndex < totalBits; channel++)
+                {
+                    double[,] mat = new double[height, width];
+                    for (int y = 0; y < height; y++)
+                        for (int x = 0; x < width; x++)
                         {
-                            // 跳過用於讀取長度的前32位元
-                            int globalBitIdx = (channel * maxBlocksX * maxBlocksY) + (by * maxBlocksX) + bx;
-
-                            if (globalBitIdx < 32)
-                                continue;
-
-                            try
-                            {
-                                double[,] block = GetDctBlock(channels[channel], bx, by);
-
-                                int u = _coefIndex / 8;
-                                int v = _coefIndex % 8;
-                                int coefInt = (int)Math.Round(block[u, v]);
-                                int bit = coefInt & 1;
-
-                                int byteIdx = msgBitIdx / 8;
-                                int bitPos = 7 - (msgBitIdx % 8);
-                                msgBytes[byteIdx] |= (byte)(bit << bitPos);
-
-                                msgBitIdx++;
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine($"讀取訊息時出錯 (通道 {channel}, bx={bx}, by={by}): {ex.Message}");
-                                continue;
-                            }
+                            Color p = stegoImage.GetPixel(x, y);
+                            mat[y, x] = channel == 0 ? p.R : channel == 1 ? p.G : p.B;
                         }
 
-                        // 更新進度
-                        progress.Report((int)((double)msgBitIdx / totalMsgBits * 100));
+                    for (int by = 0; by < blocksY && bitIndex < totalBits; by++)
+                    {
+                        for (int bx = 0; bx < blocksX && bitIndex < totalBits; bx++)
+                        {
+                            double[,] block = DctUtils.ForwardDct(mat, bx * 8, by * 8);
+                            int q = (int)Math.Round(block[u, v] / _delta);
+                            int bit = q & 1;
+
+                            if (bitIndex >= headerBits)
+                            {
+                                msgBits[msgBitIndex++] = (byte)bit;
+                            }
+
+                            bitIndex++;
+
+                            // 更新進度
+                            progress?.Report(10 + (int)(((double)(bitIndex - headerBits) / (msgLen * 8)) * 90));
+                        }
                     }
                 }
-                progress.Report(100);
-                if (msgBitIdx < totalMsgBits)
-                    throw new Exception($"無法提取完整訊息，僅獲取 {msgBitIdx}/{totalMsgBits} bits");
 
-                string msg = Encoding.UTF8.GetString(msgBytes);
-                Console.WriteLine($"提取完成，總共提取 {totalMsgBits} bits 的訊息。");
+                // 從位元陣列重建消息
+                for (int i = 0; i < msgLen * 8; i++)
+                {
+                    if (i < msgBits.Length)  // 確保不越界
+                    {
+                        int byteIndex = i / 8;
+                        int bitPos = 7 - (i % 8);
+                        msgBytes[byteIndex] |= (byte)(msgBits[i] << bitPos);
+                    }
+                }
 
-                return new StegoResult { Success = true, Message = msg };
+                progress?.Report(100); // 確保進度條達到 100%
+                string message = Encoding.UTF8.GetString(msgBytes);
+                return new StegoResult { Success = true, Message = message };
             }
             catch (Exception ex)
             {
                 return new StegoResult { Success = false, ErrorMessage = ex.Message };
             }
-        }
-
-        // 從圖像區塊計算DCT係數
-        private double[,] GetDctBlock(byte[,] channel, int blockX, int blockY)
-        {
-            double[,] block = new double[8, 8];
-
-            // 複製8x8區塊資料
-            for (int i = 0; i < 8; i++)
-            {
-                for (int j = 0; j < 8; j++)
-                {
-                    int y = blockY * 8 + i;
-                    int x = blockX * 8 + j;
-                    block[i, j] = channel[y, x];
-                }
-            }
-
-            // 進行DCT變換
-            return FastDct.ForwardDct(block);
-        }
-
-        // 將DCT係數寫回圖像區塊
-        private void WriteDctBlock(double[,] dctBlock, byte[,] channel, int blockX, int blockY)
-        {
-            // 進行反DCT變換
-            double[,] block = FastDct.InverseDct(dctBlock);
-
-            // 寫回區塊資料，並確保值在0-255範圍內
-            for (int i = 0; i < 8; i++)
-            {
-                for (int j = 0; j < 8; j++)
-                {
-                    int y = blockY * 8 + i;
-                    int x = blockX * 8 + j;
-                    int value = (int)Math.Round(block[i, j]);
-                    channel[y, x] = (byte)Math.Max(0, Math.Min(255, value));
-                }
-            }
-        }
-
-        private byte[] PreparePayload(string message)
-        {
-            var msgB = Encoding.UTF8.GetBytes(message);
-            var lenB = BitConverter.GetBytes(msgB.Length);
-            var buf = new byte[lenB.Length + msgB.Length];
-
-            // 先寫入長度，再寫入訊息內容
-            Array.Copy(lenB, buf, lenB.Length);
-            Array.Copy(msgB, 0, buf, lenB.Length, msgB.Length);
-            return buf;
-        }
-    }
-
-    // 快速DCT變換實作
-    public static class FastDct
-    {
-        // 預先計算的余弦值表
-        private static readonly double[,] cosTable;
-
-        static FastDct()
-        {
-            // 初始化余弦表
-            cosTable = new double[8, 8];
-            for (int u = 0; u < 8; u++)
-            {
-                for (int x = 0; x < 8; x++)
-                {
-                    cosTable[u, x] = Math.Cos((2 * x + 1) * u * Math.PI / 16.0);
-                }
-            }
-        }
-
-        // 前向DCT變換
-        public static double[,] ForwardDct(double[,] block)
-        {
-            // 檢查輸入大小
-            if (block.GetLength(0) != 8 || block.GetLength(1) != 8)
-                throw new ArgumentException("DCT區塊必須是8x8大小");
-
-            double[,] result = new double[8, 8];
-
-            for (int u = 0; u < 8; u++)
-            {
-                for (int v = 0; v < 8; v++)
-                {
-                    double sum = 0;
-                    for (int x = 0; x < 8; x++)
-                    {
-                        for (int y = 0; y < 8; y++)
-                        {
-                            sum += block[x, y] *
-                                   cosTable[u, x] *
-                                   cosTable[v, y];
-                        }
-                    }
-
-                    // 套用係數
-                    double cu = (u == 0) ? 1.0 / Math.Sqrt(2) : 1.0;
-                    double cv = (v == 0) ? 1.0 / Math.Sqrt(2) : 1.0;
-                    result[u, v] = 0.25 * cu * cv * sum;
-                }
-            }
-
-            return result;
-        }
-
-        // 反向DCT變換
-        public static double[,] InverseDct(double[,] dctBlock)
-        {
-            // 檢查輸入大小
-            if (dctBlock.GetLength(0) != 8 || dctBlock.GetLength(1) != 8)
-                throw new ArgumentException("DCT區塊必須是8x8大小");
-
-            double[,] result = new double[8, 8];
-
-            for (int x = 0; x < 8; x++)
-            {
-                for (int y = 0; y < 8; y++)
-                {
-                    double sum = 0;
-                    for (int u = 0; u < 8; u++)
-                    {
-                        for (int v = 0; v < 8; v++)
-                        {
-                            double cu = (u == 0) ? 1.0 / Math.Sqrt(2) : 1.0;
-                            double cv = (v == 0) ? 1.0 / Math.Sqrt(2) : 1.0;
-                            sum += cu * cv * dctBlock[u, v] *
-                                   cosTable[u, x] *
-                                   cosTable[v, y];
-                        }
-                    }
-
-                    result[x, y] = 0.25 * sum;
-                }
-            }
-
-            return result;
         }
     }
 }

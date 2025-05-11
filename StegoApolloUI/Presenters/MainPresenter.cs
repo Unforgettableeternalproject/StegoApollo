@@ -47,6 +47,7 @@ namespace StegoApolloUI.Presenters
                     _stegoService = new LsbStegoService();
                     break;
                 case "DCT 演算法":
+                    throw new NotImplementedException("DCT 目前被放棄了。");
                     _stegoService = new DctStegoService(coefIndex: 10);
                     break;
                 case "QIM 演算法":

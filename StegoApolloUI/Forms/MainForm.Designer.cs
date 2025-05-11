@@ -744,9 +744,9 @@
             this.ClientSize = new System.Drawing.Size(800, 531);
             this.Controls.Add(this.panel_Algorithm);
             this.Controls.Add(this.panel_Functions);
-            this.Controls.Add(this.panel_Decrypt);
-            this.Controls.Add(this.panel_Default);
             this.Controls.Add(this.panel_Encrypt);
+            this.Controls.Add(this.panel_Default);
+            this.Controls.Add(this.panel_Decrypt);
             this.Controls.Add(this.status);
             this.Controls.Add(this.menu);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
