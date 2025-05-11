@@ -110,10 +110,15 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\UEP.png" />
+    <Content Include="Screenshots\001.png" />
+    <Content Include="Screenshots\002.png" />
+    <Content Include="Screenshots\003.png" />
+    <Content Include="Screenshots\004.png" />
     <None Include="Assets\delete-button.png" />
     <None Include="Assets\Background.jpg" />
     <None Include="Assets\check-button.png" />
     <Content Include="Assets\Default Preview.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
