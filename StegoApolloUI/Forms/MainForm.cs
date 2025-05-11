@@ -42,6 +42,11 @@ namespace StegoApolloUI
             txtbox_dFilePath.Enter += DisableFocus;
             rtxtbox_eEncryptText.Enter += ClearDefault;
             rtxtbox_eEncryptText.Leave += RegainDefault;
+            this.Move += (s, e) =>
+            {
+                if (_logForm != null && !_logForm.IsDisposed)
+                    _logForm.Location = new Point(this.Right, this.Top);
+            };
         }
 
         public string InputFilePath { get { return _inputFilePath; } set { _inputFilePath = value;  } }
@@ -94,6 +99,8 @@ namespace StegoApolloUI
 
         public void InitApp()
         {
+            btn_Encrypt.Enabled = true;
+            btn_Decrypt.Enabled = true;
             panel_Functions.Show();
             panel_Default.Show();
             panel_Encrypt.Hide();
@@ -104,7 +111,9 @@ namespace StegoApolloUI
             MessageText = "";
             processedImage = null;
             IsProcessed = false;
+            tprogressBar.Value = 0;
             lbl_ModeTitle.Text = "選擇一個模式來開始";
+            
             LogManager.Instance.Clear();
             LogManager.Instance.LogInfo("應用程式已初始化!");
         }
@@ -195,15 +204,32 @@ namespace StegoApolloUI
 
         private void ShowLogForm()
         {
-            if (_logForm == null || _logForm.IsDisposed) // 確保只有一個 LogForm 實例
+            if (_logForm == null || _logForm.IsDisposed)
             {
+                btn_eLogDisplay.Text = "隱藏詳細流程";
                 _logForm = new LogForm();
-                _logForm.FormClosed += (s, args) => _logForm = null; // 當 LogForm 關閉時，釋放引用
-                _logForm.Show(); // 非模態顯示
+                _logForm.FormClosed += (s, args) => { _logForm = null; btn_eLogDisplay.Text = "顯示詳細流程"; };
+
+                // 1. 手動定位
+                _logForm.StartPosition = FormStartPosition.Manual;
+                // 2. 位置：X 座標貼齊主窗右側，Y 座標與主窗頂部對齊
+                _logForm.Location = new Point(this.Right, this.Top);
+                // 3. 高度同步
+                _logForm.Height = this.Height;
+                // （可選）寬度你也可以固定或動態設定
+                //_logForm.Width = 300;
+
+                _logForm.Show(this);  // 傳入 this，確保它不會跑到前面擋住主視窗
             }
             else
             {
-                _logForm.BringToFront(); // 如果已經開啟，將其帶到前台
+                btn_eLogDisplay.Text = "顯示詳細流程";
+                if (_logForm != null && !_logForm.IsDisposed)
+                {
+                    _logForm.Close();
+                    _logForm = null;
+                    return;
+                }
             }
         }
 
@@ -277,6 +303,20 @@ namespace StegoApolloUI
             }
         }
 
+        private void menu_reset_Click(object sender, EventArgs e)
+        {
+            // Reset Everything
+            DialogResult f = MessageBox.Show("重置會棄置目前所有的進度，並且回到應用程式的初始樣子，確認要繼續嗎?", "完全重置", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+            if (f == DialogResult.No)
+            {
+                return;
+            }
+            LogManager.Instance.LogInfo("使用者進行完全重置。");
+            EncryptInit(); // 順便把兩個模式下的元件也一起重置
+            DecryptInit();
+            InitApp();
+            InitAlgorithmSelector();
+        }
         private void cBox_AlgoSelect_SelectedIndexChanged(object sender, EventArgs e)
         {
             if(InputFilePath != "" || MessageText != "")

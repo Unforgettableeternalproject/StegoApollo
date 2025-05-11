@@ -31,6 +31,7 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.menu = new System.Windows.Forms.MenuStrip();
+            this.menu_functions = new System.Windows.Forms.ToolStripMenuItem();
             this.menu_file = new System.Windows.Forms.ToolStripMenuItem();
             this.menu_open = new System.Windows.Forms.ToolStripMenuItem();
             this.menu_save = new System.Windows.Forms.ToolStripMenuItem();
@@ -42,6 +43,8 @@
             this.tprogressBar = new System.Windows.Forms.ToolStripProgressBar();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.btn_eHistogram = new System.Windows.Forms.Button();
+            this.txtbox_eFilePath = new System.Windows.Forms.TextBox();
+            this.btn_AlgoExplain = new System.Windows.Forms.Button();
             this.panel_Encrypt = new System.Windows.Forms.Panel();
             this.panel_eActions = new System.Windows.Forms.Panel();
             this.btn_eLogDisplay = new System.Windows.Forms.Button();
@@ -60,8 +63,8 @@
             this.lbl_eTextNotice = new System.Windows.Forms.Label();
             this.panel_eFileManagement = new System.Windows.Forms.Panel();
             this.btn_eBrowse = new System.Windows.Forms.Button();
-            this.txtbox_eFilePath = new System.Windows.Forms.TextBox();
             this.lbl_eImport = new System.Windows.Forms.Label();
+            this.eImageDisplay = new System.Windows.Forms.PictureBox();
             this.panel_Decrypt = new System.Windows.Forms.Panel();
             this.panel_dActions = new System.Windows.Forms.Panel();
             this.btn_dLogDisplay = new System.Windows.Forms.Button();
@@ -81,6 +84,7 @@
             this.btn_dBrowse = new System.Windows.Forms.Button();
             this.txtbox_dFilePath = new System.Windows.Forms.TextBox();
             this.lbl_dImport = new System.Windows.Forms.Label();
+            this.dImageDisplay = new System.Windows.Forms.PictureBox();
             this.panel_Default = new System.Windows.Forms.Panel();
             this.lbl_DefaultMsg = new System.Windows.Forms.Label();
             this.lbl_ModeTitle = new System.Windows.Forms.Label();
@@ -91,8 +95,7 @@
             this.cBox_AlgoSelect = new System.Windows.Forms.ComboBox();
             this.lbl_AlgoSelect = new System.Windows.Forms.Label();
             this.btn_Logo = new System.Windows.Forms.Button();
-            this.eImageDisplay = new System.Windows.Forms.PictureBox();
-            this.dImageDisplay = new System.Windows.Forms.PictureBox();
+            this.menu_reset = new System.Windows.Forms.ToolStripMenuItem();
             this.menu.SuspendLayout();
             this.status.SuspendLayout();
             this.panel_Encrypt.SuspendLayout();
@@ -100,21 +103,22 @@
             this.panel_eProgressBar.SuspendLayout();
             this.panel_eTextArea.SuspendLayout();
             this.panel_eFileManagement.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.eImageDisplay)).BeginInit();
             this.panel_Decrypt.SuspendLayout();
             this.panel_dActions.SuspendLayout();
             this.panel_dProgressBar.SuspendLayout();
             this.panel_dTextArea.SuspendLayout();
             this.panel_dFileManagement.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dImageDisplay)).BeginInit();
             this.panel_Default.SuspendLayout();
             this.panel_Functions.SuspendLayout();
             this.panel_Algorithm.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.eImageDisplay)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dImageDisplay)).BeginInit();
             this.SuspendLayout();
             // 
             // menu
             // 
             this.menu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menu_functions,
             this.menu_file,
             this.menu_help});
             this.menu.Location = new System.Drawing.Point(0, 0);
@@ -122,6 +126,14 @@
             this.menu.Size = new System.Drawing.Size(800, 24);
             this.menu.TabIndex = 0;
             this.menu.Text = "menuStrip1";
+            // 
+            // menu_functions
+            // 
+            this.menu_functions.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menu_reset});
+            this.menu_functions.Name = "menu_functions";
+            this.menu_functions.Size = new System.Drawing.Size(43, 20);
+            this.menu_functions.Text = "功能";
             // 
             // menu_file
             // 
@@ -136,13 +148,13 @@
             // menu_open
             // 
             this.menu_open.Name = "menu_open";
-            this.menu_open.Size = new System.Drawing.Size(180, 22);
+            this.menu_open.Size = new System.Drawing.Size(158, 22);
             this.menu_open.Text = "開啟先前的嘗試";
             // 
             // menu_save
             // 
             this.menu_save.Name = "menu_save";
-            this.menu_save.Size = new System.Drawing.Size(180, 22);
+            this.menu_save.Size = new System.Drawing.Size(158, 22);
             this.menu_save.Text = "儲存當前嘗試";
             // 
             // menu_help
@@ -198,9 +210,31 @@
             this.btn_eHistogram.Size = new System.Drawing.Size(90, 37);
             this.btn_eHistogram.TabIndex = 1;
             this.btn_eHistogram.Text = "顯示直方圖(?)";
-            this.toolTip.SetToolTip(this.btn_eHistogram, "只支援Qim演算法");
+            this.toolTip.SetToolTip(this.btn_eHistogram, "目前只支援Qim演算法");
             this.btn_eHistogram.UseVisualStyleBackColor = true;
             this.btn_eHistogram.Click += new System.EventHandler(this.btn_eHistogram_Click);
+            // 
+            // txtbox_eFilePath
+            // 
+            this.txtbox_eFilePath.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.txtbox_eFilePath.Font = new System.Drawing.Font("微軟正黑體", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.txtbox_eFilePath.Location = new System.Drawing.Point(118, 7);
+            this.txtbox_eFilePath.Name = "txtbox_eFilePath";
+            this.txtbox_eFilePath.ReadOnly = true;
+            this.txtbox_eFilePath.Size = new System.Drawing.Size(200, 33);
+            this.txtbox_eFilePath.TabIndex = 1;
+            this.toolTip.SetToolTip(this.txtbox_eFilePath, "你想知道我是從哪裡來的嗎?");
+            // 
+            // btn_AlgoExplain
+            // 
+            this.btn_AlgoExplain.Font = new System.Drawing.Font("微軟正黑體", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.btn_AlgoExplain.Location = new System.Drawing.Point(169, 60);
+            this.btn_AlgoExplain.Name = "btn_AlgoExplain";
+            this.btn_AlgoExplain.Size = new System.Drawing.Size(30, 27);
+            this.btn_AlgoExplain.TabIndex = 100;
+            this.btn_AlgoExplain.Text = "?";
+            this.toolTip.SetToolTip(this.btn_AlgoExplain, "解釋這個演算法是怎麼運作的");
+            this.btn_AlgoExplain.UseVisualStyleBackColor = true;
             // 
             // panel_Encrypt
             // 
@@ -235,6 +269,7 @@
             this.btn_eLogDisplay.Size = new System.Drawing.Size(90, 37);
             this.btn_eLogDisplay.TabIndex = 2;
             this.btn_eLogDisplay.Text = "顯示詳細流程";
+            this.toolTip.SetToolTip(this.btn_eLogDisplay, "打開日誌窗口");
             this.btn_eLogDisplay.UseVisualStyleBackColor = true;
             this.btn_eLogDisplay.Click += new System.EventHandler(this.btn_eLogDisplay_Click);
             // 
@@ -246,6 +281,7 @@
             this.btn_eReset.Size = new System.Drawing.Size(90, 37);
             this.btn_eReset.TabIndex = 3;
             this.btn_eReset.Text = "重置藏密程序";
+            this.toolTip.SetToolTip(this.btn_eReset, "重置這個模式");
             this.btn_eReset.UseVisualStyleBackColor = true;
             this.btn_eReset.Click += new System.EventHandler(this.btn_eReset_Click);
             // 
@@ -302,6 +338,7 @@
             this.btn_eExport.Size = new System.Drawing.Size(93, 32);
             this.btn_eExport.TabIndex = 2;
             this.btn_eExport.Text = "匯出圖片";
+            this.toolTip.SetToolTip(this.btn_eExport, "將圖片下載到電腦");
             this.btn_eExport.UseVisualStyleBackColor = true;
             this.btn_eExport.Click += new System.EventHandler(this.btn_eExport_Click);
             // 
@@ -342,6 +379,7 @@
             this.btn_eExampleText.Size = new System.Drawing.Size(84, 33);
             this.btn_eExampleText.TabIndex = 6;
             this.btn_eExampleText.Text = "範例文字";
+            this.toolTip.SetToolTip(this.btn_eExampleText, "填入範例的文字");
             this.btn_eExampleText.UseVisualStyleBackColor = true;
             this.btn_eExampleText.Click += new System.EventHandler(this.btn_eExampleText_Click);
             // 
@@ -353,6 +391,7 @@
             this.btn_eStartAction.Size = new System.Drawing.Size(84, 33);
             this.btn_eStartAction.TabIndex = 5;
             this.btn_eStartAction.Text = "執行藏密!";
+            this.toolTip.SetToolTip(this.btn_eStartAction, "開始藏密程序");
             this.btn_eStartAction.UseVisualStyleBackColor = true;
             this.btn_eStartAction.Click += new System.EventHandler(this.btn_eStartAction_Click);
             // 
@@ -396,19 +435,9 @@
             this.btn_eBrowse.Size = new System.Drawing.Size(59, 30);
             this.btn_eBrowse.TabIndex = 2;
             this.btn_eBrowse.Text = "瀏覽...";
+            this.toolTip.SetToolTip(this.btn_eBrowse, "瀏覽本機文件");
             this.btn_eBrowse.UseVisualStyleBackColor = true;
             this.btn_eBrowse.Click += new System.EventHandler(this.btn_eBrowse_Click);
-            // 
-            // txtbox_eFilePath
-            // 
-            this.txtbox_eFilePath.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.txtbox_eFilePath.Font = new System.Drawing.Font("微軟正黑體", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.txtbox_eFilePath.Location = new System.Drawing.Point(118, 7);
-            this.txtbox_eFilePath.Name = "txtbox_eFilePath";
-            this.txtbox_eFilePath.ReadOnly = true;
-            this.txtbox_eFilePath.Size = new System.Drawing.Size(200, 33);
-            this.txtbox_eFilePath.TabIndex = 1;
-            this.toolTip.SetToolTip(this.txtbox_eFilePath, "你想知道我是從哪裡來的嗎?");
             // 
             // lbl_eImport
             // 
@@ -419,6 +448,18 @@
             this.lbl_eImport.Size = new System.Drawing.Size(110, 21);
             this.lbl_eImport.TabIndex = 0;
             this.lbl_eImport.Text = "導入圖像檔案:";
+            // 
+            // eImageDisplay
+            // 
+            this.eImageDisplay.BackgroundImage = global::StegoApolloUI.Properties.Resources.Default_Preview;
+            this.eImageDisplay.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.eImageDisplay.InitialImage = global::StegoApolloUI.Properties.Resources.Default_Preview;
+            this.eImageDisplay.Location = new System.Drawing.Point(399, 67);
+            this.eImageDisplay.Name = "eImageDisplay";
+            this.eImageDisplay.Size = new System.Drawing.Size(393, 300);
+            this.eImageDisplay.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.eImageDisplay.TabIndex = 0;
+            this.eImageDisplay.TabStop = false;
             // 
             // panel_Decrypt
             // 
@@ -451,6 +492,7 @@
             this.btn_dLogDisplay.Size = new System.Drawing.Size(90, 37);
             this.btn_dLogDisplay.TabIndex = 2;
             this.btn_dLogDisplay.Text = "顯示詳細流程";
+            this.toolTip.SetToolTip(this.btn_dLogDisplay, "打開日誌窗口");
             this.btn_dLogDisplay.UseVisualStyleBackColor = true;
             this.btn_dLogDisplay.Click += new System.EventHandler(this.btn_dLogDisplay_Click);
             // 
@@ -462,6 +504,7 @@
             this.btn_dReset.Size = new System.Drawing.Size(90, 37);
             this.btn_dReset.TabIndex = 3;
             this.btn_dReset.Text = "重置萃取程序";
+            this.toolTip.SetToolTip(this.btn_dReset, "重置這個模式");
             this.btn_dReset.UseVisualStyleBackColor = true;
             this.btn_dReset.Click += new System.EventHandler(this.btn_dReset_Click);
             // 
@@ -518,6 +561,7 @@
             this.btn_dExport.Size = new System.Drawing.Size(93, 32);
             this.btn_dExport.TabIndex = 2;
             this.btn_dExport.Text = "複製文字";
+            this.toolTip.SetToolTip(this.btn_dExport, "將萃取出來的文字給複製到剪貼簿");
             this.btn_dExport.UseVisualStyleBackColor = true;
             this.btn_dExport.Click += new System.EventHandler(this.btn_dExport_Click);
             // 
@@ -557,6 +601,7 @@
             this.btn_dStartAction.Size = new System.Drawing.Size(84, 33);
             this.btn_dStartAction.TabIndex = 5;
             this.btn_dStartAction.Text = "執行萃取!";
+            this.toolTip.SetToolTip(this.btn_dStartAction, "開始萃取程序");
             this.btn_dStartAction.UseVisualStyleBackColor = true;
             this.btn_dStartAction.Click += new System.EventHandler(this.btn_dStartAction_Click);
             // 
@@ -600,6 +645,7 @@
             this.btn_dBrowse.Size = new System.Drawing.Size(59, 30);
             this.btn_dBrowse.TabIndex = 2;
             this.btn_dBrowse.Text = "瀏覽...";
+            this.toolTip.SetToolTip(this.btn_dBrowse, "瀏覽本機文件");
             this.btn_dBrowse.UseVisualStyleBackColor = true;
             this.btn_dBrowse.Click += new System.EventHandler(this.btn_dBrowse_Click);
             // 
@@ -622,6 +668,18 @@
             this.lbl_dImport.Size = new System.Drawing.Size(110, 21);
             this.lbl_dImport.TabIndex = 0;
             this.lbl_dImport.Text = "導入圖像檔案:";
+            // 
+            // dImageDisplay
+            // 
+            this.dImageDisplay.BackgroundImage = global::StegoApolloUI.Properties.Resources.Default_Preview;
+            this.dImageDisplay.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.dImageDisplay.InitialImage = global::StegoApolloUI.Properties.Resources.Default_Preview;
+            this.dImageDisplay.Location = new System.Drawing.Point(5, 69);
+            this.dImageDisplay.Name = "dImageDisplay";
+            this.dImageDisplay.Size = new System.Drawing.Size(393, 300);
+            this.dImageDisplay.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.dImageDisplay.TabIndex = 1;
+            this.dImageDisplay.TabStop = false;
             // 
             // panel_Default
             // 
@@ -664,6 +722,7 @@
             this.btn_Encrypt.Size = new System.Drawing.Size(116, 48);
             this.btn_Encrypt.TabIndex = 9;
             this.btn_Encrypt.Text = "藏密";
+            this.toolTip.SetToolTip(this.btn_Encrypt, "進入藏密模式");
             this.btn_Encrypt.UseVisualStyleBackColor = true;
             this.btn_Encrypt.Click += new System.EventHandler(this.btn_Encrypt_Click);
             // 
@@ -675,6 +734,7 @@
             this.btn_Decrypt.Size = new System.Drawing.Size(116, 48);
             this.btn_Decrypt.TabIndex = 10;
             this.btn_Decrypt.Text = "萃取";
+            this.toolTip.SetToolTip(this.btn_Decrypt, "進入萃取模式");
             this.btn_Decrypt.UseVisualStyleBackColor = true;
             this.btn_Decrypt.Click += new System.EventHandler(this.btn_Decrypt_Click);
             // 
@@ -690,6 +750,7 @@
             // 
             // panel_Algorithm
             // 
+            this.panel_Algorithm.Controls.Add(this.btn_AlgoExplain);
             this.panel_Algorithm.Controls.Add(this.cBox_AlgoSelect);
             this.panel_Algorithm.Controls.Add(this.lbl_AlgoSelect);
             this.panel_Algorithm.Location = new System.Drawing.Point(587, 21);
@@ -701,7 +762,7 @@
             // 
             this.cBox_AlgoSelect.Font = new System.Drawing.Font("微軟正黑體", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
             this.cBox_AlgoSelect.FormattingEnabled = true;
-            this.cBox_AlgoSelect.Location = new System.Drawing.Point(48, 59);
+            this.cBox_AlgoSelect.Location = new System.Drawing.Point(42, 59);
             this.cBox_AlgoSelect.Name = "cBox_AlgoSelect";
             this.cBox_AlgoSelect.Size = new System.Drawing.Size(121, 28);
             this.cBox_AlgoSelect.TabIndex = 99;
@@ -731,29 +792,13 @@
             this.btn_Logo.UseVisualStyleBackColor = false;
             this.btn_Logo.Click += new System.EventHandler(this.btn_Logo_Click);
             // 
-            // eImageDisplay
+            // menu_reset
             // 
-            this.eImageDisplay.BackgroundImage = global::StegoApolloUI.Properties.Resources.Default_Preview;
-            this.eImageDisplay.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.eImageDisplay.InitialImage = global::StegoApolloUI.Properties.Resources.Default_Preview;
-            this.eImageDisplay.Location = new System.Drawing.Point(399, 67);
-            this.eImageDisplay.Name = "eImageDisplay";
-            this.eImageDisplay.Size = new System.Drawing.Size(393, 300);
-            this.eImageDisplay.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.eImageDisplay.TabIndex = 0;
-            this.eImageDisplay.TabStop = false;
-            // 
-            // dImageDisplay
-            // 
-            this.dImageDisplay.BackgroundImage = global::StegoApolloUI.Properties.Resources.Default_Preview;
-            this.dImageDisplay.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.dImageDisplay.InitialImage = global::StegoApolloUI.Properties.Resources.Default_Preview;
-            this.dImageDisplay.Location = new System.Drawing.Point(5, 69);
-            this.dImageDisplay.Name = "dImageDisplay";
-            this.dImageDisplay.Size = new System.Drawing.Size(393, 300);
-            this.dImageDisplay.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.dImageDisplay.TabIndex = 1;
-            this.dImageDisplay.TabStop = false;
+            this.menu_reset.ForeColor = System.Drawing.Color.Maroon;
+            this.menu_reset.Name = "menu_reset";
+            this.menu_reset.Size = new System.Drawing.Size(180, 22);
+            this.menu_reset.Text = "重置所有東西";
+            this.menu_reset.Click += new System.EventHandler(this.menu_reset_Click);
             // 
             // MainForm
             // 
@@ -764,9 +809,9 @@
             this.Controls.Add(this.btn_Logo);
             this.Controls.Add(this.panel_Algorithm);
             this.Controls.Add(this.panel_Functions);
-            this.Controls.Add(this.panel_Encrypt);
-            this.Controls.Add(this.panel_Default);
             this.Controls.Add(this.panel_Decrypt);
+            this.Controls.Add(this.panel_Default);
+            this.Controls.Add(this.panel_Encrypt);
             this.Controls.Add(this.status);
             this.Controls.Add(this.menu);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
@@ -787,6 +832,7 @@
             this.panel_eTextArea.PerformLayout();
             this.panel_eFileManagement.ResumeLayout(false);
             this.panel_eFileManagement.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.eImageDisplay)).EndInit();
             this.panel_Decrypt.ResumeLayout(false);
             this.panel_dActions.ResumeLayout(false);
             this.panel_dProgressBar.ResumeLayout(false);
@@ -795,13 +841,12 @@
             this.panel_dTextArea.PerformLayout();
             this.panel_dFileManagement.ResumeLayout(false);
             this.panel_dFileManagement.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dImageDisplay)).EndInit();
             this.panel_Default.ResumeLayout(false);
             this.panel_Default.PerformLayout();
             this.panel_Functions.ResumeLayout(false);
             this.panel_Algorithm.ResumeLayout(false);
             this.panel_Algorithm.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.eImageDisplay)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dImageDisplay)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -872,6 +917,9 @@
         private System.Windows.Forms.Label lbl_AlgoSelect;
         private System.Windows.Forms.ComboBox cBox_AlgoSelect;
         private System.Windows.Forms.Button btn_Logo;
+        private System.Windows.Forms.Button btn_AlgoExplain;
+        private System.Windows.Forms.ToolStripMenuItem menu_functions;
+        private System.Windows.Forms.ToolStripMenuItem menu_reset;
     }
 }
 
