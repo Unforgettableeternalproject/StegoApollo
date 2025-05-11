@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.menu = new System.Windows.Forms.MenuStrip();
             this.menu_file = new System.Windows.Forms.ToolStripMenuItem();
             this.menu_open = new System.Windows.Forms.ToolStripMenuItem();
@@ -61,7 +62,6 @@
             this.btn_eBrowse = new System.Windows.Forms.Button();
             this.txtbox_eFilePath = new System.Windows.Forms.TextBox();
             this.lbl_eImport = new System.Windows.Forms.Label();
-            this.eImageDisplay = new System.Windows.Forms.PictureBox();
             this.panel_Decrypt = new System.Windows.Forms.Panel();
             this.panel_dActions = new System.Windows.Forms.Panel();
             this.btn_dLogDisplay = new System.Windows.Forms.Button();
@@ -81,7 +81,6 @@
             this.btn_dBrowse = new System.Windows.Forms.Button();
             this.txtbox_dFilePath = new System.Windows.Forms.TextBox();
             this.lbl_dImport = new System.Windows.Forms.Label();
-            this.dImageDisplay = new System.Windows.Forms.PictureBox();
             this.panel_Default = new System.Windows.Forms.Panel();
             this.lbl_DefaultMsg = new System.Windows.Forms.Label();
             this.lbl_ModeTitle = new System.Windows.Forms.Label();
@@ -91,6 +90,9 @@
             this.panel_Algorithm = new System.Windows.Forms.Panel();
             this.cBox_AlgoSelect = new System.Windows.Forms.ComboBox();
             this.lbl_AlgoSelect = new System.Windows.Forms.Label();
+            this.btn_Logo = new System.Windows.Forms.Button();
+            this.eImageDisplay = new System.Windows.Forms.PictureBox();
+            this.dImageDisplay = new System.Windows.Forms.PictureBox();
             this.menu.SuspendLayout();
             this.status.SuspendLayout();
             this.panel_Encrypt.SuspendLayout();
@@ -98,16 +100,16 @@
             this.panel_eProgressBar.SuspendLayout();
             this.panel_eTextArea.SuspendLayout();
             this.panel_eFileManagement.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.eImageDisplay)).BeginInit();
             this.panel_Decrypt.SuspendLayout();
             this.panel_dActions.SuspendLayout();
             this.panel_dProgressBar.SuspendLayout();
             this.panel_dTextArea.SuspendLayout();
             this.panel_dFileManagement.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dImageDisplay)).BeginInit();
             this.panel_Default.SuspendLayout();
             this.panel_Functions.SuspendLayout();
             this.panel_Algorithm.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.eImageDisplay)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dImageDisplay)).BeginInit();
             this.SuspendLayout();
             // 
             // menu
@@ -126,6 +128,7 @@
             this.menu_file.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menu_open,
             this.menu_save});
+            this.menu_file.Enabled = false;
             this.menu_file.Name = "menu_file";
             this.menu_file.Size = new System.Drawing.Size(43, 20);
             this.menu_file.Text = "檔案";
@@ -133,17 +136,18 @@
             // menu_open
             // 
             this.menu_open.Name = "menu_open";
-            this.menu_open.Size = new System.Drawing.Size(158, 22);
+            this.menu_open.Size = new System.Drawing.Size(180, 22);
             this.menu_open.Text = "開啟先前的嘗試";
             // 
             // menu_save
             // 
             this.menu_save.Name = "menu_save";
-            this.menu_save.Size = new System.Drawing.Size(158, 22);
+            this.menu_save.Size = new System.Drawing.Size(180, 22);
             this.menu_save.Text = "儲存當前嘗試";
             // 
             // menu_help
             // 
+            this.menu_help.Enabled = false;
             this.menu_help.Name = "menu_help";
             this.menu_help.Size = new System.Drawing.Size(43, 20);
             this.menu_help.Text = "幫助";
@@ -354,7 +358,7 @@
             // 
             // rtxtbox_eEncryptText
             // 
-            this.rtxtbox_eEncryptText.Font = new System.Drawing.Font("微軟正黑體", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.rtxtbox_eEncryptText.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
             this.rtxtbox_eEncryptText.ForeColor = System.Drawing.Color.DarkGray;
             this.rtxtbox_eEncryptText.Location = new System.Drawing.Point(7, 42);
             this.rtxtbox_eEncryptText.Name = "rtxtbox_eEncryptText";
@@ -404,6 +408,7 @@
             this.txtbox_eFilePath.ReadOnly = true;
             this.txtbox_eFilePath.Size = new System.Drawing.Size(200, 33);
             this.txtbox_eFilePath.TabIndex = 1;
+            this.toolTip.SetToolTip(this.txtbox_eFilePath, "你想知道我是從哪裡來的嗎?");
             // 
             // lbl_eImport
             // 
@@ -414,18 +419,6 @@
             this.lbl_eImport.Size = new System.Drawing.Size(110, 21);
             this.lbl_eImport.TabIndex = 0;
             this.lbl_eImport.Text = "導入圖像檔案:";
-            // 
-            // eImageDisplay
-            // 
-            this.eImageDisplay.BackgroundImage = global::StegoApolloUI.Properties.Resources.Default_Preview;
-            this.eImageDisplay.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.eImageDisplay.InitialImage = global::StegoApolloUI.Properties.Resources.Default_Preview;
-            this.eImageDisplay.Location = new System.Drawing.Point(399, 67);
-            this.eImageDisplay.Name = "eImageDisplay";
-            this.eImageDisplay.Size = new System.Drawing.Size(393, 300);
-            this.eImageDisplay.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.eImageDisplay.TabIndex = 0;
-            this.eImageDisplay.TabStop = false;
             // 
             // panel_Decrypt
             // 
@@ -569,7 +562,7 @@
             // 
             // rtxtbox_dDecryptText
             // 
-            this.rtxtbox_dDecryptText.Font = new System.Drawing.Font("微軟正黑體", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.rtxtbox_dDecryptText.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
             this.rtxtbox_dDecryptText.ForeColor = System.Drawing.SystemColors.ScrollBar;
             this.rtxtbox_dDecryptText.Location = new System.Drawing.Point(7, 42);
             this.rtxtbox_dDecryptText.Name = "rtxtbox_dDecryptText";
@@ -629,18 +622,6 @@
             this.lbl_dImport.Size = new System.Drawing.Size(110, 21);
             this.lbl_dImport.TabIndex = 0;
             this.lbl_dImport.Text = "導入圖像檔案:";
-            // 
-            // dImageDisplay
-            // 
-            this.dImageDisplay.BackgroundImage = global::StegoApolloUI.Properties.Resources.Default_Preview;
-            this.dImageDisplay.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.dImageDisplay.InitialImage = global::StegoApolloUI.Properties.Resources.Default_Preview;
-            this.dImageDisplay.Location = new System.Drawing.Point(5, 69);
-            this.dImageDisplay.Name = "dImageDisplay";
-            this.dImageDisplay.Size = new System.Drawing.Size(393, 300);
-            this.dImageDisplay.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.dImageDisplay.TabIndex = 1;
-            this.dImageDisplay.TabStop = false;
             // 
             // panel_Default
             // 
@@ -736,12 +717,51 @@
             this.lbl_AlgoSelect.TabIndex = 0;
             this.lbl_AlgoSelect.Text = "選擇使用的演算法:";
             // 
+            // btn_Logo
+            // 
+            this.btn_Logo.BackColor = System.Drawing.Color.Transparent;
+            this.btn_Logo.BackgroundImage = global::StegoApolloUI.Properties.Resources.UEP;
+            this.btn_Logo.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
+            this.btn_Logo.FlatAppearance.BorderSize = 0;
+            this.btn_Logo.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn_Logo.Location = new System.Drawing.Point(0, 21);
+            this.btn_Logo.Name = "btn_Logo";
+            this.btn_Logo.Size = new System.Drawing.Size(214, 101);
+            this.btn_Logo.TabIndex = 12;
+            this.btn_Logo.UseVisualStyleBackColor = false;
+            this.btn_Logo.Click += new System.EventHandler(this.btn_Logo_Click);
+            // 
+            // eImageDisplay
+            // 
+            this.eImageDisplay.BackgroundImage = global::StegoApolloUI.Properties.Resources.Default_Preview;
+            this.eImageDisplay.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.eImageDisplay.InitialImage = global::StegoApolloUI.Properties.Resources.Default_Preview;
+            this.eImageDisplay.Location = new System.Drawing.Point(399, 67);
+            this.eImageDisplay.Name = "eImageDisplay";
+            this.eImageDisplay.Size = new System.Drawing.Size(393, 300);
+            this.eImageDisplay.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.eImageDisplay.TabIndex = 0;
+            this.eImageDisplay.TabStop = false;
+            // 
+            // dImageDisplay
+            // 
+            this.dImageDisplay.BackgroundImage = global::StegoApolloUI.Properties.Resources.Default_Preview;
+            this.dImageDisplay.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.dImageDisplay.InitialImage = global::StegoApolloUI.Properties.Resources.Default_Preview;
+            this.dImageDisplay.Location = new System.Drawing.Point(5, 69);
+            this.dImageDisplay.Name = "dImageDisplay";
+            this.dImageDisplay.Size = new System.Drawing.Size(393, 300);
+            this.dImageDisplay.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.dImageDisplay.TabIndex = 1;
+            this.dImageDisplay.TabStop = false;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
             this.ClientSize = new System.Drawing.Size(800, 531);
+            this.Controls.Add(this.btn_Logo);
             this.Controls.Add(this.panel_Algorithm);
             this.Controls.Add(this.panel_Functions);
             this.Controls.Add(this.panel_Encrypt);
@@ -749,7 +769,8 @@
             this.Controls.Add(this.panel_Decrypt);
             this.Controls.Add(this.status);
             this.Controls.Add(this.menu);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menu;
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
@@ -766,7 +787,6 @@
             this.panel_eTextArea.PerformLayout();
             this.panel_eFileManagement.ResumeLayout(false);
             this.panel_eFileManagement.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.eImageDisplay)).EndInit();
             this.panel_Decrypt.ResumeLayout(false);
             this.panel_dActions.ResumeLayout(false);
             this.panel_dProgressBar.ResumeLayout(false);
@@ -775,12 +795,13 @@
             this.panel_dTextArea.PerformLayout();
             this.panel_dFileManagement.ResumeLayout(false);
             this.panel_dFileManagement.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dImageDisplay)).EndInit();
             this.panel_Default.ResumeLayout(false);
             this.panel_Default.PerformLayout();
             this.panel_Functions.ResumeLayout(false);
             this.panel_Algorithm.ResumeLayout(false);
             this.panel_Algorithm.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.eImageDisplay)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dImageDisplay)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -850,6 +871,7 @@
         private System.Windows.Forms.Panel panel_Algorithm;
         private System.Windows.Forms.Label lbl_AlgoSelect;
         private System.Windows.Forms.ComboBox cBox_AlgoSelect;
+        private System.Windows.Forms.Button btn_Logo;
     }
 }
 

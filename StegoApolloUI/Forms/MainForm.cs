@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using StegoApolloUI.Views;
+using StegoApolloUI.Forms;
 using StegoApolloUI.Presenters;
 using System.Diagnostics.Eventing.Reader;
 using System.Security.Cryptography;
@@ -21,6 +22,7 @@ namespace StegoApolloUI
     public partial class MainForm : Form, IMainView
     {
         private readonly int _maxMessageLength;
+        private LogForm _logForm = null; // 日誌視窗
         private string currentMode = "None";
         private string _inputFilePath = "";
         private string _messageText = "";
@@ -103,6 +105,8 @@ namespace StegoApolloUI
             processedImage = null;
             IsProcessed = false;
             lbl_ModeTitle.Text = "選擇一個模式來開始";
+            LogManager.Instance.Clear();
+            LogManager.Instance.LogInfo("應用程式已初始化!");
         }
 
         public void EncryptInit()
@@ -129,6 +133,7 @@ namespace StegoApolloUI
             lbl_eProcessText.Hide();
             ShowProgress(0);
             ShowImage(null);
+            LogManager.Instance.LogInfo("已切換至藏密模式!");
         }
 
         public void DecryptInit()
@@ -155,6 +160,7 @@ namespace StegoApolloUI
             lbl_dProcessText.Hide();
             ShowProgress(0);
             ShowImage(null);
+            LogManager.Instance.LogInfo("已切換至萃取模式!");
         }
 
         public virtual void ShowProgress(int percent)
@@ -165,6 +171,8 @@ namespace StegoApolloUI
                 pBar_eProgress.Value = percent;
 
                 if (percent == 0) return;
+                if (percent % 25 == 0) LogManager.Instance.LogInfo($"進度：{percent}%");
+                if (percent == 100) LogManager.Instance.LogSuccess("藏密完成!");
 
                 lbl_eProcessText.Show();
                 lbl_eProcessText.Text = percent == 100 ? "處理完成!" : $"處理中...{percent}%";
@@ -175,12 +183,28 @@ namespace StegoApolloUI
                 pBar_dProgress.Value = percent;
 
                 if (percent == 0) return;
+                if (percent % 25 == 0) LogManager.Instance.LogInfo($"進度：{percent}%");
+                if (percent == 100) LogManager.Instance.LogSuccess("萃取完成!");
 
                 lbl_dProcessText.Show();
                 lbl_dProcessText.Text = percent == 100 ? "處理完成!" : $"處理中...{percent}%";
                 lbl_dProcessText.ForeColor = percent == 100 ? Color.SeaGreen : Color.Goldenrod;
             }
             tprogressBar.Value = percent;
+        }
+
+        private void ShowLogForm()
+        {
+            if (_logForm == null || _logForm.IsDisposed) // 確保只有一個 LogForm 實例
+            {
+                _logForm = new LogForm();
+                _logForm.FormClosed += (s, args) => _logForm = null; // 當 LogForm 關閉時，釋放引用
+                _logForm.Show(); // 非模態顯示
+            }
+            else
+            {
+                _logForm.BringToFront(); // 如果已經開啟，將其帶到前台
+            }
         }
 
         public virtual void ShowImage(Bitmap bmp)
@@ -199,24 +223,27 @@ namespace StegoApolloUI
             {
                 eImageDisplay.Image = bmp;
                 eImageDisplay.BackgroundImage = Properties.Resources.Background;
-
+                LogManager.Instance.LogInfo($"顯示圖片：{bmp.Width}x{bmp.Height}");
                 if (IsProcessed) processedImage = bmp;
             }else if(currentMode == "Decrypt")
             {
                 dImageDisplay.Image = bmp;
                 dImageDisplay.BackgroundImage = Properties.Resources.Background;
+                LogManager.Instance.LogInfo($"顯示圖片：{bmp.Width}x{bmp.Height}");
             }
         }
 
         public virtual void ShowError(string message)
         {
             // 顯示錯誤訊息
+            LogManager.Instance.LogError(message);
             MessageBox.Show(message, "錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         public virtual void ShowInfo(string message)
         {
             // 顯示資訊訊息
+            LogManager.Instance.LogInfo(message);
             MessageBox.Show(message, "資訊", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
@@ -225,14 +252,30 @@ namespace StegoApolloUI
             // 顯示萃取的訊息
             if(string.IsNullOrWhiteSpace(message))
             {
+                LogManager.Instance.LogWarning("沒有可提取的內容!");
                 rtxtbox_dDecryptText.Text = "沒有可提取的內容!";
                 return;
             }
+            LogManager.Instance.LogSuccess("萃取程序結束!");
             rtxtbox_dDecryptText.Text = message;
             _isTextboxDefault = false;
         }
 
         #region Components
+        private void btn_Logo_Click(object sender, EventArgs e)
+        {
+            // Lead to my github
+            string url = "https://github.com/Unforgettableeternalproject";
+            try
+            {
+                System.Diagnostics.Process.Start(url);
+            }
+            catch (Exception ex)
+            {
+                LogManager.Instance.LogError($"無法打開網址：{ex.Message}");
+                MessageBox.Show(":(", "可惜了...", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
 
         private void cBox_AlgoSelect_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -290,6 +333,14 @@ namespace StegoApolloUI
                 IsProcessed = false;
                 ShowImage(new Bitmap(fileDialog.FileName));
             }
+            else
+            {
+                LogManager.Instance.LogWarning("使用者取消了檔案選擇。");
+                return;
+            }
+
+            LogManager.Instance.LogInfo($"選擇的圖片路徑：{InputFilePath}");
+            LogManager.Instance.LogInfo($"圖片尺寸: {new Bitmap(fileDialog.FileName).Width}x{new Bitmap(fileDialog.FileName).Height}");
         }
         private void rtxtbox_eEncryptText_TextChanged(object sender, EventArgs e)
         {
@@ -318,6 +369,7 @@ namespace StegoApolloUI
             rtxtbox_eEncryptText.ForeColor = Color.Black;
             MessageText = _exampleText;
             _isTextboxDefault = false;
+            LogManager.Instance.LogInfo("使用範例文字!");
         }
 
         private void btn_eStartAction_Click(object sender, EventArgs e)
@@ -326,15 +378,18 @@ namespace StegoApolloUI
 
             if (d == DialogResult.No)
             {
+                LogManager.Instance.LogInfo("使用者取消了藏密動作。");
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(rtxtbox_eEncryptText.Text) || _isTextboxDefault)
             {
+                LogManager.Instance.LogError("使用者沒有提供任何藏密用的文字。");
                 MessageBox.Show("你並沒有提供任何藏密用的文字!", "錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
+            LogManager.Instance.LogInfo("開始藏密動作...");
             EmbedRequested?.Invoke(this, EventArgs.Empty);
         }
         private void btn_eExport_Click(object sender, EventArgs e)
@@ -356,17 +411,20 @@ namespace StegoApolloUI
                     }
 
                     // 保存圖像
+                    LogManager.Instance.LogSuccess($"儲存藏密後的圖片到：{filePath}");
                     processedImage.Save(filePath, System.Drawing.Imaging.ImageFormat.Png);
+                    MessageBox.Show("圖片已成功儲存!", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 catch (IOException ioEx)
                 {
+                    LogManager.Instance.LogError(ioEx.Message);
                     MessageBox.Show($"文件可能被鎖定或無法訪問：{ioEx.Message}", "錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 catch (ExternalException ex)
                 {
+                    LogManager.Instance.LogError(ex.Message);
                     MessageBox.Show($"保存圖像時發生錯誤：{ex.Message}", "錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-                MessageBox.Show("圖片已成功儲存!", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
         private void btn_eReset_Click(object sender, EventArgs e)
@@ -379,12 +437,12 @@ namespace StegoApolloUI
                     return;
                 }
             }
+            LogManager.Instance.LogInfo("使用者進行重置。");
             EncryptInit();
         }
         private void btn_eLogDisplay_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("目前尚未實作!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            DoNothing(); // TODO: Implement log display
+            ShowLogForm();
         }
         private void btn_eHistogram_Click(object sender, EventArgs e)
         {
@@ -421,6 +479,14 @@ namespace StegoApolloUI
                 IsProcessed = false;
                 ShowImage(new Bitmap(fileDialog.FileName));
             }
+            else
+            {
+                LogManager.Instance.LogWarning("使用者取消了檔案選擇。");
+                return;
+            }
+
+            LogManager.Instance.LogInfo($"選擇的圖片路徑：{InputFilePath}");
+            LogManager.Instance.LogInfo($"圖片尺寸: {new Bitmap(fileDialog.FileName).Width}x{new Bitmap(fileDialog.FileName).Height}");
         }
 
         private void btn_dStartAction_Click(object sender, EventArgs e)
@@ -429,9 +495,11 @@ namespace StegoApolloUI
 
             if (d == DialogResult.No)
             {
+                LogManager.Instance.LogInfo("使用者取消了萃取動作。");
                 return;
             }
 
+            LogManager.Instance.LogInfo("開始萃取動作...");
             ExtractRequested?.Invoke(this, EventArgs.Empty);
         }
         private void btn_dExport_Click(object sender, EventArgs e)
@@ -439,10 +507,13 @@ namespace StegoApolloUI
             // 實際上就只是複製rbox_dDecryptText的內容到剪貼簿
             if (_isTextboxDefault)
             {
+                LogManager.Instance.LogError("沒有可複製的萃取文字。");
                 MessageBox.Show("沒有任何可複製的內容!", "錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
+
             Clipboard.SetText(rtxtbox_dDecryptText.Text);
+            LogManager.Instance.LogSuccess("已成功複製到剪貼簿!");
             MessageBox.Show("已成功複製到剪貼簿!", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
@@ -456,12 +527,12 @@ namespace StegoApolloUI
                     return;
                 }
             }
+            LogManager.Instance.LogInfo("使用者進行重置。");
             DecryptInit();
         }
         private void btn_dLogDisplay_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("目前尚未實作!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            DoNothing(); // TODO: Implement log display
+            ShowLogForm();
         }
 
         #endregion
@@ -524,6 +595,7 @@ namespace StegoApolloUI
 
         private void GenerateHistogram(Bitmap image)
         {
+            LogManager.Instance.LogInfo("正在生成直方圖...");
             // 1. 前置檢查
             if (cBox_AlgoSelect.SelectedItem?.ToString() != "QIM 演算法")
             {
@@ -579,6 +651,7 @@ namespace StegoApolloUI
                 try { File.Delete(tempFile); } catch { }
             };
             f.ShowDialog();
+            LogManager.Instance.LogSuccess("直方圖生成完成!");
         }
         #endregion
     }

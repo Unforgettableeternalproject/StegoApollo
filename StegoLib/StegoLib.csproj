@@ -52,6 +52,7 @@
     <Compile Include="Utilities\DctUtils.cs" />
     <Compile Include="Utilities\HistogramHelper.cs" />
     <Compile Include="Utilities\ImageHelper.cs" />
+    <Compile Include="Utilities\LogManager.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
