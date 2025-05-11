@@ -169,10 +169,9 @@ namespace StegoLib.Services
                     msgBytes[byteIndex] |= (byte)(bit << bitPos);
 
                     // 更新進度
-                    if (progress != null && i % 100 == 0)
-                        progress.Report((int)(((double)i / (msgLen * 8)) * 100));
+                    progress.Report((int)(((double)i / (msgLen * 8)) * 100));
                 }
-
+                progress.Report(100);
                 string message = Encoding.UTF8.GetString(msgBytes);
 
                 Console.WriteLine($"提取完成，總共提取 {msgLen * 8} bits 的訊息。");

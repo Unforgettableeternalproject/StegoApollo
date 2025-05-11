@@ -258,7 +258,7 @@ namespace StegoApolloUI
             // 取得選擇的演算法
             string selectedAlgorithm = cBox_AlgoSelect.SelectedItem.ToString();
 
-            if(selectedAlgorithm == "DCT 演算法")
+            if (selectedAlgorithm == "DCT 演算法")
             {
                 MessageBox.Show("DCT 演算法尚未實作!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 cBox_AlgoSelect.SelectedIndex = 0; // 重設為 LSB 演算法

@@ -139,10 +139,9 @@ namespace StegoLib.Services
                     msgBytes[byteIdx] |= (byte)(bit << bitPos);
 
                     // 更新進度
-                    if (progress != null && i % 100 == 0)
-                        progress.Report((int)((double)i / (msgLen * 8) * 100));
+                    progress.Report((int)((double)i / (msgLen * 8) * 100));
                 }
-
+                progress.Report(100);
                 // 4) 將訊息內容轉換為字串
                 string message = Encoding.UTF8.GetString(msgBytes);
 
