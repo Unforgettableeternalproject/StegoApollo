@@ -1,9 +1,7 @@
-﻿// StegoLib/Services/DctStegoService.cs
-using System;
+﻿using System;
 using System.Drawing;
 using System.Text;
 using StegoLib.Models;
-using StegoLib.Utilities;
 
 namespace StegoLib.Services
 {

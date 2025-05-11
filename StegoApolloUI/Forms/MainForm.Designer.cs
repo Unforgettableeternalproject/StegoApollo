@@ -235,6 +235,7 @@
             this.btn_AlgoExplain.Text = "?";
             this.toolTip.SetToolTip(this.btn_AlgoExplain, "解釋這個演算法是怎麼運作的");
             this.btn_AlgoExplain.UseVisualStyleBackColor = true;
+            this.btn_AlgoExplain.Click += new System.EventHandler(this.btn_AlgoExplain_Click);
             // 
             // panel_Encrypt
             // 

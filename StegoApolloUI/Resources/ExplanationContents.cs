@@ -1,0 +1,207 @@
+﻿namespace StegoApolloUI.Resources
+{
+    public static class ExplanationContents
+    {
+        // LSB
+        public const string LsbTitle =
+"LSB (Least Significant Bit) 演算法";
+        public const string LsbContent =
+@"LSB 是指在數位影像中，每個像素的每個顏色通道（紅、綠、藍）都是由 8 位元組成的數值（0-255）。這個演算法的核心理念是：修改這 8 位元中的最後一位（最不重要的位元），人眼幾乎察覺不到變化，但可以藉此隱藏資訊。例如，將 10101100 修改為 10101101，視覺上幾乎無差異。
+程式實作與流程說明
+
+讀取載入影像：先將原始影像載入記憶體
+讀取要隱藏的訊息：將訊息轉換成二進位序列
+嵌入訊息流程：
+// 假設 message 是二進位形式的訊息
+int messageIndex = 0;
+
+// 遍歷圖像的每個像素
+for (int y = 0; y < height; y++) {
+  for (int x = 0; x < width; x++) {
+    Color pixel = bmp.GetPixel(x, y);
+    
+    // 依序處理 RGB 三個通道
+    int r = pixel.R;
+    int g = pixel.G;
+    int b = pixel.B;
+    
+    // 如果還有訊息要嵌入
+    if (messageIndex < message.Length) {
+      // 修改紅色通道的最低位
+      r = (r & ~1) | message[messageIndex++]; // ~1 是二進位的 11111110，做 AND 運算會清除最低位
+    }
+    
+    if (messageIndex < message.Length) {
+      // 修改綠色通道的最低位
+      g = (g & ~1) | message[messageIndex++];
+    }
+    
+    if (messageIndex < message.Length) {
+      // 修改藍色通道的最低位
+      b = (b & ~1) | message[messageIndex++];
+    }
+    
+    // 設置修改後的像素值
+    bmp.SetPixel(x, y, Color.FromArgb(pixel.A, r, g, b));
+  }
+}
+
+
+優缺點分析
+優點：
+
+實作非常簡單，容易理解與編程
+容量大：每個像素可嵌入 3 位元資訊（RGB 各一位）
+修改最小，視覺上幾乎無差異：只改變 0-1 之間的值
+
+缺點：
+
+非常脆弱：任何會改變最低位元的操作都會破壞隱藏的資訊
+不耐任何形式的影像處理：如壓縮、模糊、亮度調整等
+容易被檢測：統計分析最低位分佈即可發現異常";
+
+        // QIM
+        public const string QimTitle =
+"QIM (Quantization Index Modulation) 演算法";
+        public const string QimContent =
+@"QIM 透過量化（Quantization）的方式隱藏資訊。簡單來說，就是將像素值分成規律的區間（例如間隔 Δ=4），然後根據要嵌入的位元值（0或1），將像素值調整到相應的區間中心點。
+例如，設定 Δ=4：
+
+如果要嵌入「0」，則將像素值調整為 4 的倍數（0, 4, 8, 12...）
+如果要嵌入「1」，則將像素值調整為 4 的倍數 +2（2, 6, 10, 14...）
+
+這樣設計的優勢是，即使像素值被輕微干擾（例如 ±1），提取時依然可以正確識別。
+程式實作與流程說明
+
+設定量化步長 Δ：通常選擇 4 或 8 等值
+讀取和處理影像：
+int delta = 4; // 量化步長
+int messageIndex = 0;
+
+// 遍歷灰階圖像的每個像素
+for (int y = 0; y < height; y++) {
+  for (int x = 0; x < width; x++) {
+    if (messageIndex >= message.Length) break;
+    
+    // 獲取當前像素值
+    int grayValue = grayImage[y, x];
+    
+    // 步驟1: 量化 - 除以 Δ 並四捨五入
+    int q = (int)Math.Round((double)grayValue / delta);
+    
+    // 步驟2: 判斷嵌入位元是否符合偶奇規則
+    int bitToEmbed = message[messageIndex++];
+    
+    // 偶數代表0，奇數代表1
+    if ((q % 2) != bitToEmbed) {
+      // 如果不符合，調整 q 值
+      q += (q % 2 == 0) ? 1 : -1; 
+    }
+    
+    // 步驟3: 反量化，重建像素值
+    grayImage[y, x] = q * delta;
+  }
+}
+
+
+視覺化說明
+想像一個數線，標記 0, 1, 2, 3, 4, 5, 6, 7, 8...
+
+嵌入「0」時，像素值會被調整到：0, 4, 8, 12... (4n)
+嵌入「1」時，像素值會被調整到：2, 6, 10, 14... (4n+2)
+
+這樣在提取時，只需要看像素值除以 Δ 後是偶數還是奇數即可。
+優缺點分析
+優點：
+
+抗干擾能力強：即使像素值有小幅度變化，仍能正確提取資訊
+直方圖呈現階梯狀，易於視覺檢查嵌入效果
+相較於 LSB 更穩健，能承受輕微的影像處理操作
+
+缺點：
+
+容量較小：每個像素只能嵌入 1 位元資訊
+視覺變化較 LSB 明顯：可能在平滑區域產生輕微可見的變化
+量化步長與視覺質量、抗干擾能力成反比關係";
+
+        // DCT-QIM
+        public const string DctTitle =
+"DCT-QIM (頻域量化調變) 演算法";
+        public const string DctContent =
+@"DCT-QIM 結合了頻域轉換與量化指數調變的優點。不同於前兩種在空間域直接處理像素值的方法，DCT-QIM 先將影像分割成 8×8 的區塊，對每個區塊進行離散餘弦變換（DCT），將資訊嵌入到變換後的頻域係數中。
+基本流程：
+
+影像分割為 8×8 區塊
+每個區塊進行 DCT 轉換，得到 64 個頻域係數
+選擇中頻係數進行 QIM 嵌入（避開低頻和高頻）
+對修改後的區塊進行反 DCT 變換，還原到空間域
+
+選擇中頻係數是因為：低頻係數包含影像主要視覺資訊，修改會造成明顯變化；高頻係數易受壓縮和處理影響。中頻係數既不太影響視覺質量，又相對穩定。
+程式實作與流程說明
+int delta = 20; // 量化步長，頻域中通常較大
+int messageIndex = 0;
+int u = 4, v = 5; // 選擇的中頻係數位置
+
+// 對每個顏色通道分別處理
+foreach (var channel in new[] { ""R"", ""G"", ""B"" }) {
+    // 將通道數據轉換為 double 矩陣
+    double[,] mat = ConvertChannelToMatrix(image, channel);
+    
+    // 遍歷每個 8x8 區塊
+    for (int by = 0; by < height/8; by++) {
+        for (int bx = 0; bx < width/8; bx++) {
+            if (messageIndex >= message.Length) break;
+            
+            // 步驟1: 提取當前區塊
+            double[,] block = ExtractBlock(mat, bx, by);
+            
+            // 步驟2: 前向 DCT 轉換
+            double[,] dctBlock = ForwardDCT(block);
+            
+            // 步驟3: 選擇中頻係數進行 QIM
+            double coefficient = dctBlock[u, v];
+            int q = (int)Math.Round(coefficient / delta);
+            
+            int bitToEmbed = message[messageIndex++];
+            
+            // 偶數代表0，奇數代表1
+            if ((q % 2) != bitToEmbed) {
+                q += (q % 2 == 0) ? 1 : -1;
+            }
+            
+            // 更新係數值
+            dctBlock[u, v] = q * delta;
+            
+            // 步驟4: 反向 DCT 轉換
+            double[,] idctBlock = InverseDCT(dctBlock);
+            
+            // 步驟5: 將區塊寫回原始矩陣
+            WriteBackBlock(mat, idctBlock, bx, by);
+        }
+    }
+    
+    // 將處理後的矩陣轉回影像
+    UpdateImageChannel(image, mat, channel);
+}
+視覺化說明
+DCT 將空間域轉換到頻域，使每個 8×8 區塊被分解為不同頻率的成分：
+
+左上角是低頻區，包含區塊的主要特徵
+右下角是高頻區，包含細節和邊緣資訊
+中間區域是中頻，修改它們對視覺影響較小
+
+選擇係數位置 (u=4, v=5) 表示在 8×8 區塊的 DCT 係數矩陣中，選第 4 列第 5 行的係數進行修改。
+優缺點分析
+優點：
+
+抗壓縮能力強：特別是對 JPEG 這類基於 DCT 的壓縮演算法
+更隱蔽：修改在頻域中進行，空間域上的變化分散且不明顯
+穩健性好：能抵抗多種影像處理操作，如輕微裁剪、旋轉等
+
+缺點：
+
+計算複雜度高：需要進行 DCT 和 IDCT 變換
+容量受限：每個 8×8 區塊只能嵌入少量資訊
+實作難度較高：需要理解 DCT 及其特性";
+    }
+}

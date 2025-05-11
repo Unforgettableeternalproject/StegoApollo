@@ -1,18 +1,12 @@
 ﻿using System;
 using System.IO;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using StegoApolloUI.Views;
 using StegoApolloUI.Forms;
-using StegoApolloUI.Presenters;
-using System.Diagnostics.Eventing.Reader;
-using System.Security.Cryptography;
+using StegoApolloUI.Resources;
 using StegoLib.Utilities;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
@@ -23,6 +17,7 @@ namespace StegoApolloUI
     {
         private readonly int _maxMessageLength;
         private LogForm _logForm = null; // 日誌視窗
+        private ExplanationForm _expForm = null; // 演算法說明視窗
         private string currentMode = "None";
         private string _inputFilePath = "";
         private string _messageText = "";
@@ -46,6 +41,8 @@ namespace StegoApolloUI
             {
                 if (_logForm != null && !_logForm.IsDisposed)
                     _logForm.Location = new Point(this.Right, this.Top);
+                if (_expForm != null && !_expForm.IsDisposed)
+                    _expForm.Location = new Point(this.Left - _expForm.Width, this.Top);
             };
         }
 
@@ -88,7 +85,6 @@ namespace StegoApolloUI
         }
         public event EventHandler EmbedRequested;
         public event EventHandler ExtractRequested;
-        public event EventHandler ErrorRequested;
         public event EventHandler<AlgorithmChangedEventArgs> AlgorithmChanged;
 
         private void InitAlgorithmSelector()
@@ -233,6 +229,32 @@ namespace StegoApolloUI
             }
         }
 
+        private void ShowExplanationForm()
+        {
+            if (_expForm == null || _expForm.IsDisposed)
+            {
+                _expForm = new ExplanationForm();
+                _expForm.FormClosed += (s, args) => { _expForm = null; };
+
+                _expForm.StartPosition = FormStartPosition.Manual;
+                // 貼齊主窗左側、同頂部同高度
+                _expForm.Location = new Point(this.Left - 300, this.Top); // 300 可改成你想要的寬度
+                _expForm.Height = this.Height;
+                _expForm.Width = 300; // 固定寬度
+                UpdateAlgorithmDescription(); // 更新演算法說明
+                _expForm.Show(this);
+            }
+            else
+            {
+                if (_expForm != null && !_expForm.IsDisposed)
+                {
+                    _expForm.Close();
+                    _expForm = null;
+                    return;
+                }
+            }
+        }
+
         public virtual void ShowImage(Bitmap bmp)
         {
             if (bmp == null) {
@@ -287,6 +309,44 @@ namespace StegoApolloUI
             _isTextboxDefault = false;
         }
 
+        private void UpdateAlgorithmDescription()
+        {
+            string alg = cBox_AlgoSelect.SelectedItem?.ToString() ?? "";
+            string title, content;
+            Color color;
+
+            switch (alg)
+            {
+                case "LSB 演算法":
+                    title = ExplanationContents.LsbTitle;
+                    content = ExplanationContents.LsbContent;
+                    color = Color.MediumBlue;
+                    break;
+                case "QIM 演算法":
+                    title = ExplanationContents.QimTitle;
+                    content = ExplanationContents.QimContent;
+                    color = Color.Green;
+                    break;
+                case "DCT 演算法": // 這個是 DCT-QIM 的說明，但我放棄這東西了
+                    title = ExplanationContents.DctTitle;
+                    content = ExplanationContents.DctContent;
+                    color = Color.DarkCyan;
+                    break;
+                default:
+                    // 如果沒選或是未知，隱藏窗體就好了
+                    title = "";
+                    content = "";
+                    color = Color.Black;
+                    break;
+            }
+
+            // 如果窗體存在，就更新；否則記錄在 _pendingTitle/_pendingContent 供開啟時用
+            if (_expForm != null && !_expForm.IsDisposed)
+            {
+                _expForm.SetDescription(title, content, color);
+            }
+        }
+
         #region Components
         private void btn_Logo_Click(object sender, EventArgs e)
         {
@@ -302,6 +362,10 @@ namespace StegoApolloUI
                 MessageBox.Show(":(", "可惜了...", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+        private void btn_AlgoExplain_Click(object sender, EventArgs e)
+        {
+            ShowExplanationForm();
+        }
 
         private void menu_reset_Click(object sender, EventArgs e)
         {
@@ -311,20 +375,23 @@ namespace StegoApolloUI
             {
                 return;
             }
-            LogManager.Instance.LogInfo("使用者進行完全重置。");
+
             EncryptInit(); // 順便把兩個模式下的元件也一起重置
             DecryptInit();
             InitApp();
-            InitAlgorithmSelector();
+            cBox_AlgoSelect.SelectedIndex = 0;
+            LogManager.Instance.LogInfo("使用者進行完全重置。");
         }
         private void cBox_AlgoSelect_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if(InputFilePath != "" || MessageText != "")
+            var prev = cBox_AlgoSelect.SelectedItem?.ToString() ?? "";
+
+            if (InputFilePath != "" || MessageText != "")
             {
                 DialogResult f = MessageBox.Show("變更演算法會被迫拋棄目前的進度，確認嗎?", "變更演算法", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (f == DialogResult.No)
                 {
-                    cBox_AlgoSelect.SelectedIndex = 0; // 這裡可能要再處理一下
+                    cBox_AlgoSelect.SelectedIndex = prev == "LSB" ? 0 : 1; // 恢復到之前的選擇
                     return;
                 }
             }
@@ -340,7 +407,7 @@ namespace StegoApolloUI
 
             // 取得選擇的演算法
             string selectedAlgorithm = cBox_AlgoSelect.SelectedItem.ToString();
-
+            UpdateAlgorithmDescription();
             AlgorithmChanged?.Invoke(this, new AlgorithmChangedEventArgs(selectedAlgorithm));
         }
 
@@ -597,7 +664,7 @@ namespace StegoApolloUI
 
         private void PreventClose(object sender, FormClosingEventArgs e)
         {
-            if (MessageBox.Show("確定要關閉應用程式嗎？", "關閉應用程式", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+            if (MessageBox.Show("確定要關閉應用程式嗎？ (Bernie 會想念你的)", "關閉應用程式", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
             {
                 e.Cancel = true;
             }

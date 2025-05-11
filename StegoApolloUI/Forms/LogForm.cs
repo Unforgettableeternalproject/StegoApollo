@@ -10,7 +10,7 @@ namespace StegoApolloUI.Forms
         public LogForm()
         {
             InitializeComponent();
-
+            ShowInTaskbar = false;
             this.Load += LogForm_Load;
             rtxtbox_Logs.Enter += DisableFocus;
             timer_refreash.Tick += (s, _) =>
