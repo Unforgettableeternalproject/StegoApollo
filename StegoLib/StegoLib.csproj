@@ -46,6 +46,7 @@
     <Compile Include="Models\StegoResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\DctStegoService.cs" />
+    <Compile Include="Services\HistShiftService.cs" />
     <Compile Include="Services\IStegoService.cs" />
     <Compile Include="Services\LsbStegoService.cs" />
     <Compile Include="Services\QimStegoService.cs" />

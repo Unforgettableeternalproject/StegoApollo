@@ -89,7 +89,7 @@ namespace StegoApolloUI
 
         private void InitAlgorithmSelector()
         {
-            cBox_AlgoSelect.Items.AddRange(new string[] { "LSB 演算法", "QIM 演算法" }); // 放棄DCT
+            cBox_AlgoSelect.Items.AddRange(new string[] { "LSB 演算法", "QIM 演算法", "HistShift 演算法" }); // 放棄DCT
             cBox_AlgoSelect.SelectedIndex = 0; // 預設選擇第一個演算法
         }
 

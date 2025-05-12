@@ -47,6 +47,10 @@ namespace StegoApolloUI.Presenters
                 case "DCT 演算法":
                     LogManager.Instance.LogInfo("切換至 DCT 演算法，但我不想做了");
                     throw new NotImplementedException("DCT 目前被放棄了。");
+                case "HistShift 演算法":
+                    LogManager.Instance.LogInfo("切換至 HistShift 演算法，但我不想做了");
+                    _stegoService = new HistShiftStegoService();
+                    break;
                 case "QIM 演算法":
                     LogManager.Instance.LogInfo("切換至 QIM 演算法");
                     _stegoService = new QimStegoService(16);
