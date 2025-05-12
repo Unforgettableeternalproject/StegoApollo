@@ -34,7 +34,7 @@ namespace StegoLib.Services
                     for (int x = 0; x < w && bitIdx < totalBits; x++)
                     {
                         Color px = bmp.GetPixel(x, y);
-                        int gray = (px.R + px.G + px.B) / 3;
+                        int gray = (int)Math.Round(0.299 * px.R + 0.587 * px.G + 0.114 * px.B);
 
                         int payloadByte = payload[bitIdx / 8];
                         int bit = (payloadByte >> (7 - (bitIdx % 8))) & 1;
@@ -95,8 +95,7 @@ namespace StegoLib.Services
                         throw new Exception("圖像尺寸不足，無法提取完整訊息");
 
                     Color px = stegoImage.GetPixel(x, y);
-                    int gray = (px.R + px.G + px.B) / 3;
-
+                    int gray = (int)Math.Round(0.299 * px.R + 0.587 * px.G + 0.114 * px.B);
                     // 判斷灰階值是在偶數格(0)還是奇數格(1)
                     int mod = gray % _quantStep;
                     int bit = (mod >= _quantStep / 4 && mod < _quantStep * 3 / 4) ? 1 : 0;

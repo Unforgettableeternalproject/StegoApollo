@@ -23,8 +23,8 @@ namespace StegoApolloUI.Presenters
                 var result = await Task.Run(() => _stegoService.Embed(
                     ImageHelper.Load(_view.InputFilePath),
                     _view.MessageText, progress));
-                if (result.Success) { LogManager.Instance.LogSuccess("嵌入程序成功!"); _view.IsProcessed = true; _view.ShowImage(result.Image); }
-                else { LogManager.Instance.LogError("嵌入程序發生問題，動作沒有成功!"); _view.ShowError(result.ErrorMessage); }
+                if (result.Success) { _view.IsProcessed = true; _view.ShowImage(result.Image); LogManager.Instance.LogSuccess("嵌入程序成功!"); }
+                else { _view.ShowError(result.ErrorMessage); LogManager.Instance.LogError("嵌入程序發生問題，動作沒有成功!"); }
             };
 
             _view.ExtractRequested += (s, e) => {
@@ -32,8 +32,8 @@ namespace StegoApolloUI.Presenters
                 var progress = new Progress<int>(percent => _view.ShowProgress(percent));
                 var result = _stegoService.Extract(
                     ImageHelper.Load(_view.InputFilePath), progress);
-                if (result.Success) { LogManager.Instance.LogSuccess("萃取程序成功!"); _view.IsProcessed = true; _view.ShowExtracted($"{result.Message}"); }
-                else { LogManager.Instance.LogError("萃取程序發生問題，動作沒有成功");  _view.ShowError(result.ErrorMessage); _view.ShowExtracted(null); }
+                if (result.Success) { _view.IsProcessed = true; _view.ShowExtracted($"{result.Message}"); LogManager.Instance.LogSuccess("萃取程序成功!"); }
+                else { _view.ShowError(result.ErrorMessage); _view.ShowExtracted(null); LogManager.Instance.LogError("萃取程序發生問題，動作沒有成功"); }
             };
         }
         private void OnAlgorithmChanged(object sender, AlgorithmChangedEventArgs e)

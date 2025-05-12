@@ -10,6 +10,7 @@ namespace StegoApolloUI.Forms
         public LogForm()
         {
             InitializeComponent();
+            this.MaximizeBox = false;
             ShowInTaskbar = false;
             this.Load += LogForm_Load;
             rtxtbox_Logs.Enter += DisableFocus;
@@ -70,37 +71,36 @@ namespace StegoApolloUI.Forms
         }
         public void UpdateLogDisplay()
         {
-            // 1. 清空並畫分隔線
-            rtxtbox_Logs.Clear();
-            rtxtbox_Logs.SelectionColor = Color.Blue;
-            rtxtbox_Logs.AppendText("===== 日誌開始 =====\r\n");
-            rtxtbox_Logs.SelectionColor = Color.Black;
-
-            // 2. 讀取所有日誌
+            // 取得所有日誌
             var logs = LogManager.Instance.GetLogs(); // List<string> 或 IEnumerable<string>
             if (logs.Count == 0)
             {
-                rtxtbox_Logs.SelectionColor = Color.Gray;
-                rtxtbox_Logs.AppendText("目前沒有任何日誌記錄...\r\n");
-                rtxtbox_Logs.SelectionColor = Color.Black;
-            }
-            else
-            {
-                foreach (var line in logs)
+                if (rtxtbox_Logs.TextLength == 0) // 如果日誌已經是空的，則不重複操作
                 {
-                    // 設顏色
-                    if (line.ToString().Contains("[錯誤]")) rtxtbox_Logs.SelectionColor = Color.Red;
-                    else if (line.ToString().Contains("[警告]")) rtxtbox_Logs.SelectionColor = Color.Orange;
-                    else if (line.ToString().Contains("[成功]")) rtxtbox_Logs.SelectionColor = Color.Green;
-                    else rtxtbox_Logs.SelectionColor = Color.Black;
-
-                    // 一行一行貼上並換行
-                    rtxtbox_Logs.AppendText(line + "\r\n");
+                    rtxtbox_Logs.SelectionColor = Color.Gray;
+                    rtxtbox_Logs.AppendText("目前沒有任何日誌記錄...\r\n");
+                    rtxtbox_Logs.SelectionColor = Color.Black;
                 }
-                rtxtbox_Logs.SelectionColor = Color.Black;
+                return;
             }
 
-            // 3. 滾動到最底
+            // 檢查是否有新日誌
+            int currentLogCount = rtxtbox_Logs.Lines.Length - 1; // 減去分隔線
+            if (currentLogCount >= logs.Count) return; // 沒有新日誌則不更新
+
+            // 新增新日誌
+            for (int i = currentLogCount; i < logs.Count; i++)
+            {
+                var line = logs[i];
+                if (line.ToString().Contains("[錯誤]")) rtxtbox_Logs.SelectionColor = Color.Red;
+                else if (line.ToString().Contains("[警告]")) rtxtbox_Logs.SelectionColor = Color.Orange;
+                else if (line.ToString().Contains("[成功]")) rtxtbox_Logs.SelectionColor = Color.Green;
+                else rtxtbox_Logs.SelectionColor = Color.Black;
+
+                rtxtbox_Logs.AppendText(line + "\r\n");
+            }
+
+            // 滾動到最底部
             rtxtbox_Logs.SelectionStart = rtxtbox_Logs.Text.Length;
             rtxtbox_Logs.ScrollToCaret();
         }
