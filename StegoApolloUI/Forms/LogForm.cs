@@ -11,6 +11,7 @@ namespace StegoApolloUI.Forms
         {
             InitializeComponent();
             this.MaximizeBox = false;
+            this.MinimizeBox = false;
             ShowInTaskbar = false;
             this.Load += LogForm_Load;
             rtxtbox_Logs.Enter += DisableFocus;
@@ -57,11 +58,18 @@ namespace StegoApolloUI.Forms
                 DialogResult result = MessageBox.Show("確定要清除所有日誌嗎？", "確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (result == DialogResult.Yes)
                 {
+                    // 清空日誌管理器中的記錄
                     LogManager.Instance.Clear();
+
+                    // 清空 RichTextBox 的內容
+                    rtxtbox_Logs.Clear();
+
+                    // 添加初始分隔線
                     rtxtbox_Logs.SelectionColor = Color.Blue;
                     rtxtbox_Logs.AppendText("===== 日誌開始 =====\r\n");
                     rtxtbox_Logs.SelectionColor = Color.Black;
-                    UpdateLogDisplay();
+
+                    UpdateLogDisplay(); // 更新顯示
                 }
             }
             else
@@ -75,7 +83,7 @@ namespace StegoApolloUI.Forms
             var logs = LogManager.Instance.GetLogs(); // List<string> 或 IEnumerable<string>
             if (logs.Count == 0)
             {
-                if (rtxtbox_Logs.TextLength == 0) // 如果日誌已經是空的，則不重複操作
+                if (rtxtbox_Logs.TextLength == 1) // 如果日誌已經是空的，則不重複操作
                 {
                     rtxtbox_Logs.SelectionColor = Color.Gray;
                     rtxtbox_Logs.AppendText("目前沒有任何日誌記錄...\r\n");

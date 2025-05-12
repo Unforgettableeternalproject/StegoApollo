@@ -9,6 +9,7 @@ namespace StegoApolloUI.Forms
         {
             InitializeComponent();
             this.MaximizeBox = false;
+            this.MinimizeBox = false;
             ShowInTaskbar = false;
         }
         public void SetDescription(string title, string content, Color titleColor)
