@@ -54,6 +54,7 @@
     <Compile Include="Utilities\HistogramHelper.cs" />
     <Compile Include="Utilities\ImageHelper.cs" />
     <Compile Include="Utilities\LogManager.cs" />
+    <Compile Include="Utilities\MetadataHelper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
