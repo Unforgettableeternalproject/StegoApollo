@@ -23,12 +23,13 @@ namespace StegoLib.Services
                 int height = coverImage.Height;
                 LogManager.Instance.LogDebug($"開始嵌入，圖像大小: {width}x{height}");
                 LogManager.Instance.LogDebug($"原始訊息長度: {message.Length}, 訊息內容: {message}");
-
+                progress?.Report(0);
                 // 1. 建立 R 通道矩陣
                 int[,] rCh = new int[height, width];
                 for (int y = 0; y < height; y++)
                     for (int x = 0; x < width; x++)
                         rCh[y, x] = coverImage.GetPixel(x, y).R;
+                progress?.Report(10);
 
                 // 2. 計算 R 通道直方圖並找 peak（避開邊界）
                 var histR = HistogramHelper.ComputeChannelHistogram(coverImage, 'R');
@@ -40,6 +41,7 @@ namespace StegoLib.Services
                     return new StegoResult { Success = false, ErrorMessage = "Peak/Zero 不可為邊界值(0,1,254,255)" };
                 }
                 LogManager.Instance.LogDebug($"Peak/Zero - R:{_peakR}/{_zeroR}");
+                progress?.Report(20);
 
                 // 3. 準備 metadata (2 bytes: peak, zero)
                 byte[] metadata = new byte[] { (byte)_peakR, (byte)_zeroR };
@@ -66,6 +68,7 @@ namespace StegoLib.Services
                 for (int y = 0; y < height; y++)
                     for (int x = 0; x < width; x++)
                         if (rCh[y, x] == _peakR || rCh[y, x] == _peakR + 1) peakList.Add((x, y));
+                progress?.Report(40);
 
                 // log
                 StringBuilder listLog = new StringBuilder();
@@ -92,6 +95,7 @@ namespace StegoLib.Services
                     rCh[y, x] = _peakR + bit;
                     if (i < 32) LogManager.Instance.LogDebug($"嵌入長度bit: idx={i} @({x},{y}) value={bit}");
                 }
+                progress?.Report(70);
 
                 // 8. 寫回 Bitmap
                 var resultBmp = new Bitmap(coverImage);
@@ -119,7 +123,7 @@ namespace StegoLib.Services
             }
             catch (Exception ex)
             {
-                LogManager.Instance.LogError($"嵌入過程中發生錯誤: {ex.Message}");
+                LogManager.Instance.LogError($"藏密失敗: {ex.Message}");
                 return new StegoResult { Success = false, ErrorMessage = ex.Message };
             }
         }
@@ -131,6 +135,7 @@ namespace StegoLib.Services
                 LogManager.Instance.Log("開始提取…");
                 int w = stegoImage.Width;
                 int h = stegoImage.Height;
+                progress?.Report(0);
 
                 // 1. metadata
                 byte[] allMeta = MetadataHelper.ExtractMetadataLSB(stegoImage, METADATA_SIZE + PEAKLIST_HASH_SIZE);
@@ -138,13 +143,14 @@ namespace StegoLib.Services
                 byte[] peakListHashRef = new byte[PEAKLIST_HASH_SIZE];
                 Array.Copy(allMeta, METADATA_SIZE, peakListHashRef, 0, PEAKLIST_HASH_SIZE);
                 LogManager.Instance.LogDebug($"已提取 metadata - Peak/Zero: R:{_peakR}/{_zeroR}");
-                progress?.Report(20);
+                progress?.Report(5);
 
                 // 2. R channel
                 int[,] rCh = new int[h, w];
                 for (int y = 0; y < h; y++)
                     for (int x = 0; x < w; x++)
                         rCh[y, x] = stegoImage.GetPixel(x, y).R;
+                progress?.Report(10);
 
                 // 3. 生成 peakList（先y後x）
                 var peakList = new List<(int x, int y)>();
@@ -152,6 +158,7 @@ namespace StegoLib.Services
                     for (int x = 0; x < w; x++)
                         if (rCh[y, x] == _peakR || rCh[y, x] == _peakR + 1)
                             peakList.Add((x, y));
+                progress?.Report(20);
 
                 // log
                 StringBuilder listLog = new StringBuilder();
@@ -171,6 +178,7 @@ namespace StegoLib.Services
                     LogManager.Instance.LogError($"PeakList 不一致，萃取失敗");
                     return new StegoResult { Success = false, ErrorMessage = "PeakList 不一致，無法正確解碼。" };
                 }
+                progress?.Report(30);
                 // 只用和嵌入時同樣順序！
 
                 // 4. 提取長度（只用 peakList 前 32bit/4byte）
@@ -225,12 +233,12 @@ namespace StegoLib.Services
                     }
                 progress?.Report(100);
 
-                LogManager.Instance.LogSuccess("提取完成，進度：100%");
+                LogManager.Instance.LogSuccess("萃取完成，進度：100%");
                 return new StegoResult { Success = true, Message = msgTrimmed, Image = recoveredImage };
             }
             catch (Exception ex)
             {
-                LogManager.Instance.LogError($"提取過程中發生錯誤: {ex.Message}");
+                LogManager.Instance.LogError($"萃取失敗: {ex.Message}");
                 return new StegoResult { Success = false, ErrorMessage = ex.Message };
             }
         }

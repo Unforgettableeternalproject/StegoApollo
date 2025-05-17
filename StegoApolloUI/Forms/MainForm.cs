@@ -21,6 +21,7 @@ namespace StegoApolloUI
         private string currentMode = "None";
         private string _inputFilePath = "";
         private string _messageText = "";
+        private string _processingText = "";
         private bool _isTextboxDefault = true;
         private bool _isProcessed = false;
         private Bitmap processedImage = null;
@@ -91,7 +92,7 @@ namespace StegoApolloUI
 
         private void InitAlgorithmSelector()
         {
-            cBox_AlgoSelect.Items.AddRange(new string[] { "LSB 演算法", "QIM 演算法", "HistShift 演算法" }); // 放棄DCT
+            cBox_AlgoSelect.Items.AddRange(new string[] { "LSB 演算法", "QIM 演算法", "DCT-QIM 演算法", "HistShift 演算法" }); // 放棄DCT
             cBox_AlgoSelect.SelectedIndex = 0; // 預設選擇第一個演算法
         }
 
@@ -174,6 +175,9 @@ namespace StegoApolloUI
 
         public virtual void ShowProgress(int percent)
         {
+
+            _processingText = percent == 100 ? "處理完成!" : $"處理中...{percent}%";
+
             // 顯示進度條
             if (currentMode == "Encrypt")
             {
@@ -181,11 +185,12 @@ namespace StegoApolloUI
 
                 if (percent == 0) return;
 
-                if (percent == 100) LogManager.Instance.LogSuccess("藏密完成!");
-                else LogManager.Instance.LogInfo($"進度：{percent}%");
+                if (lbl_eProcessText.Text != _processingText)
+                    if (percent == 100) LogManager.Instance.LogSuccess("藏密完成!");
+                    else if (percent % 25 == 0) LogManager.Instance.LogInfo($"進度：{percent}%");
 
                 lbl_eProcessText.Show();
-                lbl_eProcessText.Text = percent == 100 ? "處理完成!" : $"處理中...{percent}%";
+                lbl_eProcessText.Text = _processingText;
                 lbl_eProcessText.ForeColor = percent == 100 ? Color.SeaGreen : Color.Goldenrod;
             }
             else if (currentMode == "Decrypt")
@@ -193,12 +198,13 @@ namespace StegoApolloUI
                 pBar_dProgress.Value = percent;
 
                 if (percent == 0) return;
-               
-                if (percent == 100) LogManager.Instance.LogSuccess("萃取完成!");
-                else LogManager.Instance.LogInfo($"進度：{percent}%");
+
+                if (lbl_dProcessText.Text != _processingText)
+                    if (percent == 100) LogManager.Instance.LogSuccess("萃取完成!");
+                    else if (percent % 25 == 0) LogManager.Instance.LogInfo($"進度：{percent}%");
 
                 lbl_dProcessText.Show();
-                lbl_dProcessText.Text = percent == 100 ? "處理完成!" : $"處理中...{percent}%";
+                lbl_dProcessText.Text = _processingText;
                 lbl_dProcessText.ForeColor = percent == 100 ? Color.SeaGreen : Color.Goldenrod;
             }
             tprogressBar.Value = percent;
@@ -337,7 +343,7 @@ namespace StegoApolloUI
                     content = ExplanationContents.QimContent;
                     color = Color.Green;
                     break;
-                case "DCT 演算法": // 這個是 DCT-QIM 的說明，但我放棄這東西了
+                case "DCT-QIM 演算法": // 這個是 DCT-QIM 的說明，但我放棄這東西了
                     title = ExplanationContents.DctTitle;
                     content = ExplanationContents.DctContent;
                     color = Color.DarkCyan;
@@ -395,7 +401,9 @@ namespace StegoApolloUI
             DecryptInit();
             InitApp();
             cBox_AlgoSelect.SelectedIndex = 0;
-            LogManager.Instance.LogInfo("使用者進行完全重置。");
+            LogManager.Instance.Clear();
+            if (_logForm != null) ShowLogForm();
+            if (_expForm != null) ShowExplanationForm();
         }
 
         private void menu_toggleDebugMode_Click(object sender, EventArgs e)
@@ -691,6 +699,17 @@ namespace StegoApolloUI
         #region Others
         private void DoNothing() { ; }
 
+        public void Invoke(Action action)
+        {
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke(action);
+            }
+            else
+            {
+                action();
+            }
+        }
         private String ShortenFileName(string _fileName)
         {
             if (_fileName.Length > 16)

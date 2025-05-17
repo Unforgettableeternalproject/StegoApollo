@@ -19,7 +19,7 @@ namespace StegoApolloUI.Presenters
             // 把 View 事件綁到對應的 handler
             _view.EmbedRequested += async (s, e) => {
                 _view.ShowInfo("開始嵌入…");
-                var progress = new Progress<int>(percent => _view.ShowProgress(percent));
+                var progress = new Progress<int>(percent => _view.Invoke((Action)(() => _view.ShowProgress(percent))));
                 var result = await Task.Run(() => _stegoService.Embed(
                     ImageHelper.Load(_view.InputFilePath),
                     _view.MessageText, progress));
@@ -29,7 +29,7 @@ namespace StegoApolloUI.Presenters
 
             _view.ExtractRequested += (s, e) => {
                 _view.ShowInfo("開始提取…");
-                var progress = new Progress<int>(percent => _view.ShowProgress(percent));
+                var progress = new Progress<int>(percent => _view.Invoke((Action)(() => _view.ShowProgress(percent))));
                 var result = _stegoService.Extract(
                     ImageHelper.Load(_view.InputFilePath), progress);
                 if (result.Success) { _view.IsProcessed = true; if (result.Image != null) _view.ShowImage(result.Image) ; _view.ShowExtracted($"{result.Message}"); LogManager.Instance.LogSuccess("萃取程序成功!"); }
@@ -44,9 +44,10 @@ namespace StegoApolloUI.Presenters
                     LogManager.Instance.LogInfo("切換至 LSB 演算法");
                     _stegoService = new LsbStegoService();
                     break;
-                case "DCT 演算法":
-                    LogManager.Instance.LogInfo("切換至 DCT 演算法，但我不想做了");
-                    throw new NotImplementedException("DCT 目前被放棄了。");
+                case "DCT-QIM 演算法":
+                    LogManager.Instance.LogInfo("切換至 DCT-QIM 演算法");
+                    _stegoService = new DctStegoService(delta:16, coefIndex:10);
+                    break;
                 case "HistShift 演算法":
                     LogManager.Instance.LogInfo("切換至 HistShift 演算法");
                     _stegoService = new HistShiftStegoService_SingleChannel();
