@@ -16,6 +16,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "方案項目", "方案項�
 		.gitignore = .gitignore
 		README.md = README.md
 		README.zh-tw.md = README.zh-tw.md
+		Release v1.0.0.md = Release v1.0.0.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Concept Arts", "Concept Arts", "{9642F84D-8B6A-4E23-A116-C72B651F6B6D}"

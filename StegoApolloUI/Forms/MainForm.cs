@@ -216,14 +216,9 @@ namespace StegoApolloUI
                 _logForm = new LogForm();
                 _logForm.FormClosed += (s, args) => { _logForm = null; btn_eLogDisplay.Text = "顯示詳細流程"; };
 
-                // 1. 手動定位
                 _logForm.StartPosition = FormStartPosition.Manual;
-                // 2. 位置：X 座標貼齊主窗右側，Y 座標與主窗頂部對齊
                 _logForm.Location = new Point(this.Right, this.Top);
-                // 3. 高度同步
                 _logForm.Height = this.Height;
-                // （可選）寬度你也可以固定或動態設定
-                //_logForm.Width = 300;
 
                 _logForm.Show(this);  // 傳入 this，確保它不會跑到前面擋住主視窗
             }
@@ -482,6 +477,7 @@ namespace StegoApolloUI
                 IsProcessed = false;
                 originalImage = new Bitmap(fileDialog.FileName);
                 processedImage = null;
+                tprogressBar.Value = 0;
                 ShowImage(new Bitmap(fileDialog.FileName));
             }
             else
@@ -630,6 +626,7 @@ namespace StegoApolloUI
                 IsProcessed = false;
                 originalImage = new Bitmap(fileDialog.FileName);
                 processedImage = null;
+                tprogressBar.Value = 0;
                 ShowImage(new Bitmap(fileDialog.FileName));
             }
             else
