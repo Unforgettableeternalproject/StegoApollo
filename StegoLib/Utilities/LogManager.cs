@@ -9,6 +9,7 @@ namespace StegoLib.Utilities
         // 單例模式
         private static readonly Lazy<LogManager> _instance = new Lazy<LogManager>(() => new LogManager());
         public static LogManager Instance => _instance.Value;
+        public static bool DebugMode { get; set; } = false; // 是否啟用除錯模式
 
         // 日誌列表
         private List<LogEntry> _logEntries;
@@ -16,6 +17,7 @@ namespace StegoLib.Utilities
         // 日誌類型枚舉
         public enum LogType
         {
+            Debug,
             Info,
             Warning,
             Error,
@@ -41,6 +43,9 @@ namespace StegoLib.Utilities
                 string prefix;
                 switch (Type)
                 {
+                    case LogType.Debug:
+                        prefix = "[除錯]";
+                        break;
                     case LogType.Info:
                         prefix = "[訊息]";
                         break;
@@ -75,6 +80,11 @@ namespace StegoLib.Utilities
         {
             _logEntries.Add(new LogEntry(message, type));
             // 這裡可以添加事件通知機制，通知UI更新
+        }
+
+        public void LogDebug(string message)
+        {
+            if(DebugMode) Log(message, LogType.Debug);
         }
 
         public void LogInfo(string message)
