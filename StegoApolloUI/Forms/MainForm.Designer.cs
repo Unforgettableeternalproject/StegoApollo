@@ -32,6 +32,8 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.menu = new System.Windows.Forms.MenuStrip();
             this.menu_functions = new System.Windows.Forms.ToolStripMenuItem();
+            this.menu_toggleDebugMode = new System.Windows.Forms.ToolStripMenuItem();
+            this.menu_reset = new System.Windows.Forms.ToolStripMenuItem();
             this.menu_file = new System.Windows.Forms.ToolStripMenuItem();
             this.menu_open = new System.Windows.Forms.ToolStripMenuItem();
             this.menu_save = new System.Windows.Forms.ToolStripMenuItem();
@@ -45,57 +47,57 @@
             this.btn_eHistogram = new System.Windows.Forms.Button();
             this.txtbox_eFilePath = new System.Windows.Forms.TextBox();
             this.btn_AlgoExplain = new System.Windows.Forms.Button();
-            this.panel_Encrypt = new System.Windows.Forms.Panel();
-            this.panel_eActions = new System.Windows.Forms.Panel();
             this.btn_eLogDisplay = new System.Windows.Forms.Button();
             this.btn_eReset = new System.Windows.Forms.Button();
+            this.btn_eExport = new System.Windows.Forms.Button();
+            this.btn_eExampleText = new System.Windows.Forms.Button();
+            this.btn_eStartAction = new System.Windows.Forms.Button();
+            this.btn_eBrowse = new System.Windows.Forms.Button();
+            this.btn_dLogDisplay = new System.Windows.Forms.Button();
+            this.btn_dReset = new System.Windows.Forms.Button();
+            this.btn_dExport = new System.Windows.Forms.Button();
+            this.btn_dStartAction = new System.Windows.Forms.Button();
+            this.btn_dBrowse = new System.Windows.Forms.Button();
+            this.btn_Encrypt = new System.Windows.Forms.Button();
+            this.btn_Decrypt = new System.Windows.Forms.Button();
+            this.btn_dHistogram = new System.Windows.Forms.Button();
+            this.panel_Encrypt = new System.Windows.Forms.Panel();
+            this.panel_eActions = new System.Windows.Forms.Panel();
             this.panel_eProgressBar = new System.Windows.Forms.Panel();
             this.lbl_ePercentage100 = new System.Windows.Forms.Label();
             this.lbl_ePercentage0 = new System.Windows.Forms.Label();
             this.lbl_eProcessText = new System.Windows.Forms.Label();
-            this.btn_eExport = new System.Windows.Forms.Button();
             this.lbl_eProgressBarDisplay = new System.Windows.Forms.Label();
             this.pBar_eProgress = new System.Windows.Forms.ProgressBar();
             this.panel_eTextArea = new System.Windows.Forms.Panel();
-            this.btn_eExampleText = new System.Windows.Forms.Button();
-            this.btn_eStartAction = new System.Windows.Forms.Button();
             this.rtxtbox_eEncryptText = new System.Windows.Forms.RichTextBox();
             this.lbl_eTextNotice = new System.Windows.Forms.Label();
             this.panel_eFileManagement = new System.Windows.Forms.Panel();
-            this.btn_eBrowse = new System.Windows.Forms.Button();
             this.lbl_eImport = new System.Windows.Forms.Label();
             this.eImageDisplay = new System.Windows.Forms.PictureBox();
             this.panel_Decrypt = new System.Windows.Forms.Panel();
             this.panel_dActions = new System.Windows.Forms.Panel();
-            this.btn_dLogDisplay = new System.Windows.Forms.Button();
-            this.btn_dReset = new System.Windows.Forms.Button();
             this.panel_dProgressBar = new System.Windows.Forms.Panel();
             this.lbl_dPercentage100 = new System.Windows.Forms.Label();
             this.lbl_dPercentage0 = new System.Windows.Forms.Label();
             this.lbl_dProcessText = new System.Windows.Forms.Label();
-            this.btn_dExport = new System.Windows.Forms.Button();
             this.lbl_dProgressBarDisplay = new System.Windows.Forms.Label();
             this.pBar_dProgress = new System.Windows.Forms.ProgressBar();
             this.panel_dTextArea = new System.Windows.Forms.Panel();
-            this.btn_dStartAction = new System.Windows.Forms.Button();
             this.rtxtbox_dDecryptText = new System.Windows.Forms.RichTextBox();
             this.lbl_dTextNotice = new System.Windows.Forms.Label();
             this.panel_dFileManagement = new System.Windows.Forms.Panel();
-            this.btn_dBrowse = new System.Windows.Forms.Button();
             this.txtbox_dFilePath = new System.Windows.Forms.TextBox();
             this.lbl_dImport = new System.Windows.Forms.Label();
             this.dImageDisplay = new System.Windows.Forms.PictureBox();
             this.panel_Default = new System.Windows.Forms.Panel();
             this.lbl_DefaultMsg = new System.Windows.Forms.Label();
             this.lbl_ModeTitle = new System.Windows.Forms.Label();
-            this.btn_Encrypt = new System.Windows.Forms.Button();
-            this.btn_Decrypt = new System.Windows.Forms.Button();
             this.panel_Functions = new System.Windows.Forms.Panel();
             this.panel_Algorithm = new System.Windows.Forms.Panel();
             this.cBox_AlgoSelect = new System.Windows.Forms.ComboBox();
             this.lbl_AlgoSelect = new System.Windows.Forms.Label();
             this.btn_Logo = new System.Windows.Forms.Button();
-            this.menu_reset = new System.Windows.Forms.ToolStripMenuItem();
             this.menu.SuspendLayout();
             this.status.SuspendLayout();
             this.panel_Encrypt.SuspendLayout();
@@ -130,10 +132,27 @@
             // menu_functions
             // 
             this.menu_functions.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menu_toggleDebugMode,
             this.menu_reset});
             this.menu_functions.Name = "menu_functions";
             this.menu_functions.Size = new System.Drawing.Size(43, 20);
             this.menu_functions.Text = "功能";
+            // 
+            // menu_toggleDebugMode
+            // 
+            this.menu_toggleDebugMode.Name = "menu_toggleDebugMode";
+            this.menu_toggleDebugMode.Size = new System.Drawing.Size(169, 22);
+            this.menu_toggleDebugMode.Text = "除錯模式 (已停用)";
+            this.menu_toggleDebugMode.ToolTipText = "切換除錯模式開/關";
+            this.menu_toggleDebugMode.Click += new System.EventHandler(this.menu_toggleDebugMode_Click);
+            // 
+            // menu_reset
+            // 
+            this.menu_reset.ForeColor = System.Drawing.Color.Maroon;
+            this.menu_reset.Name = "menu_reset";
+            this.menu_reset.Size = new System.Drawing.Size(169, 22);
+            this.menu_reset.Text = "重置所有東西";
+            this.menu_reset.Click += new System.EventHandler(this.menu_reset_Click);
             // 
             // menu_file
             // 
@@ -209,8 +228,8 @@
             this.btn_eHistogram.Name = "btn_eHistogram";
             this.btn_eHistogram.Size = new System.Drawing.Size(90, 37);
             this.btn_eHistogram.TabIndex = 1;
-            this.btn_eHistogram.Text = "顯示直方圖(?)";
-            this.toolTip.SetToolTip(this.btn_eHistogram, "目前只支援Qim演算法");
+            this.btn_eHistogram.Text = "顯示直方圖";
+            this.toolTip.SetToolTip(this.btn_eHistogram, "顯示圖片的空間域直方圖");
             this.btn_eHistogram.UseVisualStyleBackColor = true;
             this.btn_eHistogram.Click += new System.EventHandler(this.btn_eHistogram_Click);
             // 
@@ -237,6 +256,174 @@
             this.btn_AlgoExplain.UseVisualStyleBackColor = true;
             this.btn_AlgoExplain.Click += new System.EventHandler(this.btn_AlgoExplain_Click);
             // 
+            // btn_eLogDisplay
+            // 
+            this.btn_eLogDisplay.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.btn_eLogDisplay.Location = new System.Drawing.Point(150, 3);
+            this.btn_eLogDisplay.Name = "btn_eLogDisplay";
+            this.btn_eLogDisplay.Size = new System.Drawing.Size(90, 37);
+            this.btn_eLogDisplay.TabIndex = 2;
+            this.btn_eLogDisplay.Text = "顯示詳細流程";
+            this.toolTip.SetToolTip(this.btn_eLogDisplay, "打開日誌窗口");
+            this.btn_eLogDisplay.UseVisualStyleBackColor = true;
+            this.btn_eLogDisplay.Click += new System.EventHandler(this.btn_eLogDisplay_Click);
+            // 
+            // btn_eReset
+            // 
+            this.btn_eReset.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.btn_eReset.Location = new System.Drawing.Point(3, 3);
+            this.btn_eReset.Name = "btn_eReset";
+            this.btn_eReset.Size = new System.Drawing.Size(90, 37);
+            this.btn_eReset.TabIndex = 3;
+            this.btn_eReset.Text = "重置藏密程序";
+            this.toolTip.SetToolTip(this.btn_eReset, "重置這個模式");
+            this.btn_eReset.UseVisualStyleBackColor = true;
+            this.btn_eReset.Click += new System.EventHandler(this.btn_eReset_Click);
+            // 
+            // btn_eExport
+            // 
+            this.btn_eExport.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.btn_eExport.Location = new System.Drawing.Point(291, 7);
+            this.btn_eExport.Name = "btn_eExport";
+            this.btn_eExport.Size = new System.Drawing.Size(93, 32);
+            this.btn_eExport.TabIndex = 2;
+            this.btn_eExport.Text = "匯出圖片";
+            this.toolTip.SetToolTip(this.btn_eExport, "將圖片下載到電腦");
+            this.btn_eExport.UseVisualStyleBackColor = true;
+            this.btn_eExport.Click += new System.EventHandler(this.btn_eExport_Click);
+            // 
+            // btn_eExampleText
+            // 
+            this.btn_eExampleText.Font = new System.Drawing.Font("微軟正黑體", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.btn_eExampleText.Location = new System.Drawing.Point(196, 8);
+            this.btn_eExampleText.Name = "btn_eExampleText";
+            this.btn_eExampleText.Size = new System.Drawing.Size(84, 33);
+            this.btn_eExampleText.TabIndex = 6;
+            this.btn_eExampleText.Text = "範例文字";
+            this.toolTip.SetToolTip(this.btn_eExampleText, "填入範例的文字");
+            this.btn_eExampleText.UseVisualStyleBackColor = true;
+            this.btn_eExampleText.Click += new System.EventHandler(this.btn_eExampleText_Click);
+            // 
+            // btn_eStartAction
+            // 
+            this.btn_eStartAction.Font = new System.Drawing.Font("微軟正黑體", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.btn_eStartAction.Location = new System.Drawing.Point(299, 8);
+            this.btn_eStartAction.Name = "btn_eStartAction";
+            this.btn_eStartAction.Size = new System.Drawing.Size(84, 33);
+            this.btn_eStartAction.TabIndex = 5;
+            this.btn_eStartAction.Text = "執行藏密!";
+            this.toolTip.SetToolTip(this.btn_eStartAction, "開始藏密程序");
+            this.btn_eStartAction.UseVisualStyleBackColor = true;
+            this.btn_eStartAction.Click += new System.EventHandler(this.btn_eStartAction_Click);
+            // 
+            // btn_eBrowse
+            // 
+            this.btn_eBrowse.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.btn_eBrowse.Location = new System.Drawing.Point(324, 7);
+            this.btn_eBrowse.Name = "btn_eBrowse";
+            this.btn_eBrowse.Size = new System.Drawing.Size(59, 30);
+            this.btn_eBrowse.TabIndex = 2;
+            this.btn_eBrowse.Text = "瀏覽...";
+            this.toolTip.SetToolTip(this.btn_eBrowse, "瀏覽本機文件");
+            this.btn_eBrowse.UseVisualStyleBackColor = true;
+            this.btn_eBrowse.Click += new System.EventHandler(this.btn_eBrowse_Click);
+            // 
+            // btn_dLogDisplay
+            // 
+            this.btn_dLogDisplay.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.btn_dLogDisplay.Location = new System.Drawing.Point(153, 1);
+            this.btn_dLogDisplay.Name = "btn_dLogDisplay";
+            this.btn_dLogDisplay.Size = new System.Drawing.Size(90, 37);
+            this.btn_dLogDisplay.TabIndex = 2;
+            this.btn_dLogDisplay.Text = "顯示詳細流程";
+            this.toolTip.SetToolTip(this.btn_dLogDisplay, "打開日誌窗口");
+            this.btn_dLogDisplay.UseVisualStyleBackColor = true;
+            this.btn_dLogDisplay.Click += new System.EventHandler(this.btn_dLogDisplay_Click);
+            // 
+            // btn_dReset
+            // 
+            this.btn_dReset.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.btn_dReset.Location = new System.Drawing.Point(7, 2);
+            this.btn_dReset.Name = "btn_dReset";
+            this.btn_dReset.Size = new System.Drawing.Size(90, 37);
+            this.btn_dReset.TabIndex = 3;
+            this.btn_dReset.Text = "重置萃取程序";
+            this.toolTip.SetToolTip(this.btn_dReset, "重置這個模式");
+            this.btn_dReset.UseVisualStyleBackColor = true;
+            this.btn_dReset.Click += new System.EventHandler(this.btn_dReset_Click);
+            // 
+            // btn_dExport
+            // 
+            this.btn_dExport.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.btn_dExport.Location = new System.Drawing.Point(291, 7);
+            this.btn_dExport.Name = "btn_dExport";
+            this.btn_dExport.Size = new System.Drawing.Size(93, 32);
+            this.btn_dExport.TabIndex = 2;
+            this.btn_dExport.Text = "複製文字";
+            this.toolTip.SetToolTip(this.btn_dExport, "將萃取出來的文字給複製到剪貼簿");
+            this.btn_dExport.UseVisualStyleBackColor = true;
+            this.btn_dExport.Click += new System.EventHandler(this.btn_dExport_Click);
+            // 
+            // btn_dStartAction
+            // 
+            this.btn_dStartAction.Font = new System.Drawing.Font("微軟正黑體", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.btn_dStartAction.Location = new System.Drawing.Point(299, 8);
+            this.btn_dStartAction.Name = "btn_dStartAction";
+            this.btn_dStartAction.Size = new System.Drawing.Size(84, 33);
+            this.btn_dStartAction.TabIndex = 5;
+            this.btn_dStartAction.Text = "執行萃取!";
+            this.toolTip.SetToolTip(this.btn_dStartAction, "開始萃取程序");
+            this.btn_dStartAction.UseVisualStyleBackColor = true;
+            this.btn_dStartAction.Click += new System.EventHandler(this.btn_dStartAction_Click);
+            // 
+            // btn_dBrowse
+            // 
+            this.btn_dBrowse.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.btn_dBrowse.Location = new System.Drawing.Point(324, 7);
+            this.btn_dBrowse.Name = "btn_dBrowse";
+            this.btn_dBrowse.Size = new System.Drawing.Size(59, 30);
+            this.btn_dBrowse.TabIndex = 2;
+            this.btn_dBrowse.Text = "瀏覽...";
+            this.toolTip.SetToolTip(this.btn_dBrowse, "瀏覽本機文件");
+            this.btn_dBrowse.UseVisualStyleBackColor = true;
+            this.btn_dBrowse.Click += new System.EventHandler(this.btn_dBrowse_Click);
+            // 
+            // btn_Encrypt
+            // 
+            this.btn_Encrypt.Font = new System.Drawing.Font("微軟正黑體", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.btn_Encrypt.Location = new System.Drawing.Point(20, 47);
+            this.btn_Encrypt.Name = "btn_Encrypt";
+            this.btn_Encrypt.Size = new System.Drawing.Size(116, 48);
+            this.btn_Encrypt.TabIndex = 9;
+            this.btn_Encrypt.Text = "藏密";
+            this.toolTip.SetToolTip(this.btn_Encrypt, "進入藏密模式");
+            this.btn_Encrypt.UseVisualStyleBackColor = true;
+            this.btn_Encrypt.Click += new System.EventHandler(this.btn_Encrypt_Click);
+            // 
+            // btn_Decrypt
+            // 
+            this.btn_Decrypt.Font = new System.Drawing.Font("微軟正黑體", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.btn_Decrypt.Location = new System.Drawing.Point(236, 47);
+            this.btn_Decrypt.Name = "btn_Decrypt";
+            this.btn_Decrypt.Size = new System.Drawing.Size(116, 48);
+            this.btn_Decrypt.TabIndex = 10;
+            this.btn_Decrypt.Text = "萃取";
+            this.toolTip.SetToolTip(this.btn_Decrypt, "進入萃取模式");
+            this.btn_Decrypt.UseVisualStyleBackColor = true;
+            this.btn_Decrypt.Click += new System.EventHandler(this.btn_Decrypt_Click);
+            // 
+            // btn_dHistogram
+            // 
+            this.btn_dHistogram.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.btn_dHistogram.Location = new System.Drawing.Point(299, 1);
+            this.btn_dHistogram.Name = "btn_dHistogram";
+            this.btn_dHistogram.Size = new System.Drawing.Size(90, 37);
+            this.btn_dHistogram.TabIndex = 4;
+            this.btn_dHistogram.Text = "顯示直方圖";
+            this.toolTip.SetToolTip(this.btn_dHistogram, "顯示圖片的空間域直方圖");
+            this.btn_dHistogram.UseVisualStyleBackColor = true;
+            this.btn_dHistogram.Click += new System.EventHandler(this.btn_dHistogram_Click);
+            // 
             // panel_Encrypt
             // 
             this.panel_Encrypt.BackColor = System.Drawing.SystemColors.ButtonFace;
@@ -261,30 +448,6 @@
             this.panel_eActions.Name = "panel_eActions";
             this.panel_eActions.Size = new System.Drawing.Size(392, 45);
             this.panel_eActions.TabIndex = 7;
-            // 
-            // btn_eLogDisplay
-            // 
-            this.btn_eLogDisplay.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.btn_eLogDisplay.Location = new System.Drawing.Point(150, 3);
-            this.btn_eLogDisplay.Name = "btn_eLogDisplay";
-            this.btn_eLogDisplay.Size = new System.Drawing.Size(90, 37);
-            this.btn_eLogDisplay.TabIndex = 2;
-            this.btn_eLogDisplay.Text = "顯示詳細流程";
-            this.toolTip.SetToolTip(this.btn_eLogDisplay, "打開日誌窗口");
-            this.btn_eLogDisplay.UseVisualStyleBackColor = true;
-            this.btn_eLogDisplay.Click += new System.EventHandler(this.btn_eLogDisplay_Click);
-            // 
-            // btn_eReset
-            // 
-            this.btn_eReset.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.btn_eReset.Location = new System.Drawing.Point(3, 3);
-            this.btn_eReset.Name = "btn_eReset";
-            this.btn_eReset.Size = new System.Drawing.Size(90, 37);
-            this.btn_eReset.TabIndex = 3;
-            this.btn_eReset.Text = "重置藏密程序";
-            this.toolTip.SetToolTip(this.btn_eReset, "重置這個模式");
-            this.btn_eReset.UseVisualStyleBackColor = true;
-            this.btn_eReset.Click += new System.EventHandler(this.btn_eReset_Click);
             // 
             // panel_eProgressBar
             // 
@@ -331,18 +494,6 @@
             this.lbl_eProcessText.TabIndex = 3;
             this.lbl_eProcessText.Text = "處理中...";
             // 
-            // btn_eExport
-            // 
-            this.btn_eExport.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.btn_eExport.Location = new System.Drawing.Point(291, 7);
-            this.btn_eExport.Name = "btn_eExport";
-            this.btn_eExport.Size = new System.Drawing.Size(93, 32);
-            this.btn_eExport.TabIndex = 2;
-            this.btn_eExport.Text = "匯出圖片";
-            this.toolTip.SetToolTip(this.btn_eExport, "將圖片下載到電腦");
-            this.btn_eExport.UseVisualStyleBackColor = true;
-            this.btn_eExport.Click += new System.EventHandler(this.btn_eExport_Click);
-            // 
             // lbl_eProgressBarDisplay
             // 
             this.lbl_eProgressBarDisplay.AutoSize = true;
@@ -371,30 +522,6 @@
             this.panel_eTextArea.Name = "panel_eTextArea";
             this.panel_eTextArea.Size = new System.Drawing.Size(392, 189);
             this.panel_eTextArea.TabIndex = 5;
-            // 
-            // btn_eExampleText
-            // 
-            this.btn_eExampleText.Font = new System.Drawing.Font("微軟正黑體", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.btn_eExampleText.Location = new System.Drawing.Point(196, 8);
-            this.btn_eExampleText.Name = "btn_eExampleText";
-            this.btn_eExampleText.Size = new System.Drawing.Size(84, 33);
-            this.btn_eExampleText.TabIndex = 6;
-            this.btn_eExampleText.Text = "範例文字";
-            this.toolTip.SetToolTip(this.btn_eExampleText, "填入範例的文字");
-            this.btn_eExampleText.UseVisualStyleBackColor = true;
-            this.btn_eExampleText.Click += new System.EventHandler(this.btn_eExampleText_Click);
-            // 
-            // btn_eStartAction
-            // 
-            this.btn_eStartAction.Font = new System.Drawing.Font("微軟正黑體", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.btn_eStartAction.Location = new System.Drawing.Point(299, 8);
-            this.btn_eStartAction.Name = "btn_eStartAction";
-            this.btn_eStartAction.Size = new System.Drawing.Size(84, 33);
-            this.btn_eStartAction.TabIndex = 5;
-            this.btn_eStartAction.Text = "執行藏密!";
-            this.toolTip.SetToolTip(this.btn_eStartAction, "開始藏密程序");
-            this.btn_eStartAction.UseVisualStyleBackColor = true;
-            this.btn_eStartAction.Click += new System.EventHandler(this.btn_eStartAction_Click);
             // 
             // rtxtbox_eEncryptText
             // 
@@ -427,18 +554,6 @@
             this.panel_eFileManagement.Name = "panel_eFileManagement";
             this.panel_eFileManagement.Size = new System.Drawing.Size(392, 46);
             this.panel_eFileManagement.TabIndex = 4;
-            // 
-            // btn_eBrowse
-            // 
-            this.btn_eBrowse.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.btn_eBrowse.Location = new System.Drawing.Point(324, 7);
-            this.btn_eBrowse.Name = "btn_eBrowse";
-            this.btn_eBrowse.Size = new System.Drawing.Size(59, 30);
-            this.btn_eBrowse.TabIndex = 2;
-            this.btn_eBrowse.Text = "瀏覽...";
-            this.toolTip.SetToolTip(this.btn_eBrowse, "瀏覽本機文件");
-            this.btn_eBrowse.UseVisualStyleBackColor = true;
-            this.btn_eBrowse.Click += new System.EventHandler(this.btn_eBrowse_Click);
             // 
             // lbl_eImport
             // 
@@ -478,36 +593,13 @@
             // panel_dActions
             // 
             this.panel_dActions.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel_dActions.Controls.Add(this.btn_dHistogram);
             this.panel_dActions.Controls.Add(this.btn_dLogDisplay);
             this.panel_dActions.Controls.Add(this.btn_dReset);
             this.panel_dActions.Location = new System.Drawing.Point(3, 20);
             this.panel_dActions.Name = "panel_dActions";
             this.panel_dActions.Size = new System.Drawing.Size(395, 45);
             this.panel_dActions.TabIndex = 8;
-            // 
-            // btn_dLogDisplay
-            // 
-            this.btn_dLogDisplay.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.btn_dLogDisplay.Location = new System.Drawing.Point(295, 2);
-            this.btn_dLogDisplay.Name = "btn_dLogDisplay";
-            this.btn_dLogDisplay.Size = new System.Drawing.Size(90, 37);
-            this.btn_dLogDisplay.TabIndex = 2;
-            this.btn_dLogDisplay.Text = "顯示詳細流程";
-            this.toolTip.SetToolTip(this.btn_dLogDisplay, "打開日誌窗口");
-            this.btn_dLogDisplay.UseVisualStyleBackColor = true;
-            this.btn_dLogDisplay.Click += new System.EventHandler(this.btn_dLogDisplay_Click);
-            // 
-            // btn_dReset
-            // 
-            this.btn_dReset.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.btn_dReset.Location = new System.Drawing.Point(7, 2);
-            this.btn_dReset.Name = "btn_dReset";
-            this.btn_dReset.Size = new System.Drawing.Size(90, 37);
-            this.btn_dReset.TabIndex = 3;
-            this.btn_dReset.Text = "重置萃取程序";
-            this.toolTip.SetToolTip(this.btn_dReset, "重置這個模式");
-            this.btn_dReset.UseVisualStyleBackColor = true;
-            this.btn_dReset.Click += new System.EventHandler(this.btn_dReset_Click);
             // 
             // panel_dProgressBar
             // 
@@ -554,18 +646,6 @@
             this.lbl_dProcessText.TabIndex = 3;
             this.lbl_dProcessText.Text = "處理中...";
             // 
-            // btn_dExport
-            // 
-            this.btn_dExport.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.btn_dExport.Location = new System.Drawing.Point(291, 7);
-            this.btn_dExport.Name = "btn_dExport";
-            this.btn_dExport.Size = new System.Drawing.Size(93, 32);
-            this.btn_dExport.TabIndex = 2;
-            this.btn_dExport.Text = "複製文字";
-            this.toolTip.SetToolTip(this.btn_dExport, "將萃取出來的文字給複製到剪貼簿");
-            this.btn_dExport.UseVisualStyleBackColor = true;
-            this.btn_dExport.Click += new System.EventHandler(this.btn_dExport_Click);
-            // 
             // lbl_dProgressBarDisplay
             // 
             this.lbl_dProgressBarDisplay.AutoSize = true;
@@ -593,18 +673,6 @@
             this.panel_dTextArea.Name = "panel_dTextArea";
             this.panel_dTextArea.Size = new System.Drawing.Size(392, 189);
             this.panel_dTextArea.TabIndex = 6;
-            // 
-            // btn_dStartAction
-            // 
-            this.btn_dStartAction.Font = new System.Drawing.Font("微軟正黑體", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.btn_dStartAction.Location = new System.Drawing.Point(299, 8);
-            this.btn_dStartAction.Name = "btn_dStartAction";
-            this.btn_dStartAction.Size = new System.Drawing.Size(84, 33);
-            this.btn_dStartAction.TabIndex = 5;
-            this.btn_dStartAction.Text = "執行萃取!";
-            this.toolTip.SetToolTip(this.btn_dStartAction, "開始萃取程序");
-            this.btn_dStartAction.UseVisualStyleBackColor = true;
-            this.btn_dStartAction.Click += new System.EventHandler(this.btn_dStartAction_Click);
             // 
             // rtxtbox_dDecryptText
             // 
@@ -637,18 +705,6 @@
             this.panel_dFileManagement.Name = "panel_dFileManagement";
             this.panel_dFileManagement.Size = new System.Drawing.Size(392, 46);
             this.panel_dFileManagement.TabIndex = 5;
-            // 
-            // btn_dBrowse
-            // 
-            this.btn_dBrowse.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.btn_dBrowse.Location = new System.Drawing.Point(324, 7);
-            this.btn_dBrowse.Name = "btn_dBrowse";
-            this.btn_dBrowse.Size = new System.Drawing.Size(59, 30);
-            this.btn_dBrowse.TabIndex = 2;
-            this.btn_dBrowse.Text = "瀏覽...";
-            this.toolTip.SetToolTip(this.btn_dBrowse, "瀏覽本機文件");
-            this.btn_dBrowse.UseVisualStyleBackColor = true;
-            this.btn_dBrowse.Click += new System.EventHandler(this.btn_dBrowse_Click);
             // 
             // txtbox_dFilePath
             // 
@@ -715,30 +771,6 @@
             this.lbl_ModeTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.lbl_ModeTitle.UseCompatibleTextRendering = true;
             // 
-            // btn_Encrypt
-            // 
-            this.btn_Encrypt.Font = new System.Drawing.Font("微軟正黑體", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.btn_Encrypt.Location = new System.Drawing.Point(20, 47);
-            this.btn_Encrypt.Name = "btn_Encrypt";
-            this.btn_Encrypt.Size = new System.Drawing.Size(116, 48);
-            this.btn_Encrypt.TabIndex = 9;
-            this.btn_Encrypt.Text = "藏密";
-            this.toolTip.SetToolTip(this.btn_Encrypt, "進入藏密模式");
-            this.btn_Encrypt.UseVisualStyleBackColor = true;
-            this.btn_Encrypt.Click += new System.EventHandler(this.btn_Encrypt_Click);
-            // 
-            // btn_Decrypt
-            // 
-            this.btn_Decrypt.Font = new System.Drawing.Font("微軟正黑體", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.btn_Decrypt.Location = new System.Drawing.Point(236, 47);
-            this.btn_Decrypt.Name = "btn_Decrypt";
-            this.btn_Decrypt.Size = new System.Drawing.Size(116, 48);
-            this.btn_Decrypt.TabIndex = 10;
-            this.btn_Decrypt.Text = "萃取";
-            this.toolTip.SetToolTip(this.btn_Decrypt, "進入萃取模式");
-            this.btn_Decrypt.UseVisualStyleBackColor = true;
-            this.btn_Decrypt.Click += new System.EventHandler(this.btn_Decrypt_Click);
-            // 
             // panel_Functions
             // 
             this.panel_Functions.Controls.Add(this.btn_Decrypt);
@@ -793,14 +825,6 @@
             this.btn_Logo.UseVisualStyleBackColor = false;
             this.btn_Logo.Click += new System.EventHandler(this.btn_Logo_Click);
             // 
-            // menu_reset
-            // 
-            this.menu_reset.ForeColor = System.Drawing.Color.Maroon;
-            this.menu_reset.Name = "menu_reset";
-            this.menu_reset.Size = new System.Drawing.Size(180, 22);
-            this.menu_reset.Text = "重置所有東西";
-            this.menu_reset.Click += new System.EventHandler(this.menu_reset_Click);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -810,9 +834,9 @@
             this.Controls.Add(this.btn_Logo);
             this.Controls.Add(this.panel_Algorithm);
             this.Controls.Add(this.panel_Functions);
-            this.Controls.Add(this.panel_Decrypt);
-            this.Controls.Add(this.panel_Default);
             this.Controls.Add(this.panel_Encrypt);
+            this.Controls.Add(this.panel_Default);
+            this.Controls.Add(this.panel_Decrypt);
             this.Controls.Add(this.status);
             this.Controls.Add(this.menu);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
@@ -921,6 +945,8 @@
         private System.Windows.Forms.Button btn_AlgoExplain;
         private System.Windows.Forms.ToolStripMenuItem menu_functions;
         private System.Windows.Forms.ToolStripMenuItem menu_reset;
+        private System.Windows.Forms.Button btn_dHistogram;
+        private System.Windows.Forms.ToolStripMenuItem menu_toggleDebugMode;
     }
 }
 

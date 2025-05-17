@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Text;
 using StegoLib.Models;
+using StegoLib.Utilities;
 
 namespace StegoLib.Services
 {
@@ -17,63 +18,85 @@ namespace StegoLib.Services
             if (quantStep <= 0)
                 throw new ArgumentOutOfRangeException(nameof(quantStep));
             _quantStep = quantStep;
+            LogManager.Instance.LogDebug($"QimStegoService initialized with quantStep = {_quantStep}");
         }
 
         public StegoResult Embed(Bitmap coverImage, string message, IProgress<int> progress = null)
         {
             try
             {
-                // 1) 封裝訊息長度 + 內容
+                LogManager.Instance.LogDebug("Embed method called.");
+                LogManager.Instance.LogDebug($"CoverImage Size: {coverImage.Width}x{coverImage.Height}");
+                LogManager.Instance.LogDebug($"Message Length: {message.Length}");
+
                 var payload = PreparePayload(message);
+                LogManager.Instance.LogDebug($"Payload Length: {payload.Length} bytes");
 
-                Bitmap bmp = new Bitmap(coverImage);
-                int w = bmp.Width, h = bmp.Height, bitIdx = 0, totalBits = payload.Length * 8;
+                int w = coverImage.Width, h = coverImage.Height, totalBits = payload.Length * 8;
+                if (totalBits > w * h)
+                {
+                    LogManager.Instance.LogError("Message too long for the image capacity.");
+                    return new StegoResult { Success = false, ErrorMessage = "訊息太長，超過圖片容量。" };
+                }
 
+                // 1. 前處理：將像素讀入陣列
+                int[,,] rgbMat = new int[h, w, 3];
+                for (int y = 0; y < h; y++)
+                    for (int x = 0; x < w; x++)
+                    {
+                        Color px = coverImage.GetPixel(x, y);
+                        rgbMat[y, x, 0] = px.R;
+                        rgbMat[y, x, 1] = px.G;
+                        rgbMat[y, x, 2] = px.B;
+                        if ((y * w + x) % 1000 == 0)
+                            progress?.Report((int)Math.Round(((y * w + x) * 100.0 / (w * h)) * 0.4));
+                    }
+
+                // 2. 嵌入訊息（以 R 通道為例）
+                int bitIdx = 0;
+                int channel = 0; // 0:R, 1:G, 2:B
                 for (int y = 0; y < h && bitIdx < totalBits; y++)
                 {
                     for (int x = 0; x < w && bitIdx < totalBits; x++)
                     {
-                        Color px = bmp.GetPixel(x, y);
-                        int gray = (int)Math.Round(0.299 * px.R + 0.587 * px.G + 0.114 * px.B);
-
+                        int orig = rgbMat[y, x, channel];
                         int payloadByte = payload[bitIdx / 8];
                         int bit = (payloadByte >> (7 - (bitIdx % 8))) & 1;
 
-                        // QIM: 如果 bit=0，量化到最近的偶數格；bit=1，量化到最近的奇數格
                         int qStep = _quantStep;
-                        int qIndex = gray / qStep;
-
-                        // 確保量化後會在0-255範圍內
-                        int newGray;
-                        if (bit == 0)
-                        {
-                            // 嵌入0：使用2k格
-                            newGray = qIndex * qStep;
-                        }
-                        else
-                        {
-                            // 嵌入1：使用2k+1格
-                            newGray = qIndex * qStep + qStep / 2;
-                        }
-
-                        // 確保灰階值在有效範圍內
-                        newGray = Math.Max(0, Math.Min(255, newGray));
-
-                        var newColor = Color.FromArgb(px.A, newGray, newGray, newGray);
-                        bmp.SetPixel(x, y, newColor);
+                        int qIndex = orig / qStep;
+                        int newVal = bit == 0 ? qIndex * qStep : qIndex * qStep + qStep / 2;
+                        newVal = Math.Max(0, Math.Min(255, newVal));
+                        rgbMat[y, x, channel] = newVal;
 
                         bitIdx++;
+                        if (bitIdx % 100 == 0)
+                            progress?.Report((int)Math.Round(((bitIdx) * 100.0 / totalBits) * 0.4 + 40));
                     }
-                    // 更新進度
-                    if (progress != null)
-                        progress.Report((int)((double)bitIdx / totalBits * 100));
                 }
 
-                Console.WriteLine($"嵌入完成，總共嵌入 {totalBits} bits 的訊息。");
+                // 3. 寫回像素
+                Bitmap bmp = new Bitmap(w, h);
+                for (int y = 0; y < h; y++)
+                    for (int x = 0; x < w; x++)
+                    {
+                        bmp.SetPixel(x, y, Color.FromArgb(
+                            255,
+                            rgbMat[y, x, 0],
+                            rgbMat[y, x, 1],
+                            rgbMat[y, x, 2]
+                        ));
+                        if ((y * w + x) % 1000 == 0)
+                            progress?.Report((int)Math.Round(((y * w + x) * 100.0 / (w * h)) * 0.2 + 80));
+                    }
+
+                progress?.Report(100);
+                LogManager.Instance.LogSuccess($"藏密完成，總共嵌入 {totalBits} bits 的訊息。");
                 return new StegoResult { Success = true, Image = bmp };
             }
             catch (Exception ex)
             {
+                LogManager.Instance.LogError($"藏密失敗: {ex.Message}");
                 return new StegoResult { Success = false, ErrorMessage = ex.Message };
             }
         }
@@ -82,72 +105,82 @@ namespace StegoLib.Services
         {
             try
             {
+                LogManager.Instance.LogDebug("Extract method called.");
+                LogManager.Instance.LogDebug($"StegoImage Size: {stegoImage.Width}x{stegoImage.Height}");
+
                 int w = stegoImage.Width, h = stegoImage.Height;
 
-                // 1) 提取訊息長度 (Header)
+                // 1. 前處理：將像素讀入陣列
+                int[,,] rgbMat = new int[h, w, 3];
+                for (int y = 0; y < h; y++)
+                    for (int x = 0; x < w; x++)
+                    {
+                        Color px = stegoImage.GetPixel(x, y);
+                        rgbMat[y, x, 0] = px.R;
+                        rgbMat[y, x, 1] = px.G;
+                        rgbMat[y, x, 2] = px.B;
+                        if ((y * w + x) % 1000 == 0)
+                            progress?.Report((int)Math.Round(((y * w + x) * 100.0 / (w * h)) * 0.4));
+                    }
+
+                // 2. 萃取訊息長度
+                int channel = 0; // 0:R, 1:G, 2:B
                 byte[] header = new byte[4];
-                for (int i = 0; i < 32; i++) // 4 bytes = 32 bits
+                for (int i = 0; i < 32; i++)
                 {
                     int y = i / w;
                     int x = i % w;
-
                     if (y >= h)
                         throw new Exception("圖像尺寸不足，無法提取完整訊息");
 
-                    Color px = stegoImage.GetPixel(x, y);
-                    int gray = (int)Math.Round(0.299 * px.R + 0.587 * px.G + 0.114 * px.B);
-                    // 判斷灰階值是在偶數格(0)還是奇數格(1)
-                    int mod = gray % _quantStep;
+                    int val = rgbMat[y, x, channel];
+                    int mod = val % _quantStep;
                     int bit = (mod >= _quantStep / 4 && mod < _quantStep * 3 / 4) ? 1 : 0;
 
-                    // 將位元放入對應的header位置
                     int byteIdx = i / 8;
                     int bitPos = 7 - (i % 8);
                     header[byteIdx] |= (byte)(bit << bitPos);
+
+                    if (i % 8 == 0)
+                        progress?.Report((int)Math.Round((i * 100.0 / 32) * 0.2 + 40));
                 }
 
-                // 2) 解析訊息長度
                 int msgLen = BitConverter.ToInt32(header, 0);
+                LogManager.Instance.LogDebug($"Extracted message length: {msgLen}");
 
-                // 驗證長度合理性
                 if (msgLen <= 0 || msgLen > (w * h - 4))
                     throw new Exception($"無效的訊息長度: {msgLen}");
 
-                // 3) 提取訊息內容
+                // 3. 萃取訊息
                 byte[] msgBytes = new byte[msgLen];
                 for (int i = 0; i < msgLen * 8; i++)
                 {
-                    int fullIndex = i + 32; // 跳過32位元的header
+                    int fullIndex = i + 32;
                     int y = fullIndex / w;
                     int x = fullIndex % w;
-
                     if (y >= h)
                         throw new Exception("圖像尺寸不足，無法提取完整訊息");
 
-                    Color px = stegoImage.GetPixel(x, y);
-                    int gray = (px.R + px.G + px.B) / 3;
-
-                    // 判斷灰階值是在偶數格(0)還是奇數格(1)
-                    int mod = gray % _quantStep;
+                    int val = rgbMat[y, x, channel];
+                    int mod = val % _quantStep;
                     int bit = (mod >= _quantStep / 4 && mod < _quantStep * 3 / 4) ? 1 : 0;
 
-                    // 將位元放入對應的訊息位置
                     int byteIdx = i / 8;
                     int bitPos = 7 - (i % 8);
                     msgBytes[byteIdx] |= (byte)(bit << bitPos);
 
-                    // 更新進度
-                    progress.Report((int)((double)i / (msgLen * 8) * 100));
+                    if (i % 100 == 0)
+                        progress?.Report((int)Math.Round((i * 100.0 / (msgLen * 8)) * 0.1 + 80));
                 }
-                progress.Report(100);
-                // 4) 將訊息內容轉換為字串
-                string message = Encoding.UTF8.GetString(msgBytes);
+                progress?.Report(100);
 
-                Console.WriteLine($"提取完成，總共提取 {msgLen * 8} bits 的訊息。");
+                string message = Encoding.UTF8.GetString(msgBytes);
+                LogManager.Instance.LogSuccess($"萃取完成，總共提取 {msgLen * 8} bits 的訊息。");
                 return new StegoResult { Success = true, Message = message };
             }
             catch (Exception ex)
             {
+                LogManager.Instance.LogError($"萃取失敗: {ex.Message}");
                 return new StegoResult { Success = false, ErrorMessage = ex.Message };
             }
         }
@@ -159,6 +192,7 @@ namespace StegoLib.Services
             var buf = new byte[lenB.Length + msgB.Length];
             Array.Copy(lenB, buf, lenB.Length);
             Array.Copy(msgB, 0, buf, lenB.Length, msgB.Length);
+            LogManager.Instance.LogDebug($"Prepared payload with length: {buf.Length} bytes");
             return buf;
         }
     }

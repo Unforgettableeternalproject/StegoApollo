@@ -1,30 +1,39 @@
+### This project provides multilanguage README.md file
+[![Static Badge](https://img.shields.io/badge/lang-en-red)](https://github.com/Unforgettableeternalproject/StegoApollo/blob/master/README.md) [![Static Badge](https://img.shields.io/badge/lang-zh--tw-yellow)](https://github.com/Unforgettableeternalproject/StegoApollo/blob/master/README.zh-tw.md)
+
+---
+
 # StegoApollo - A Steganography Tool
 
 ## Overview
 
-StegoApollo is a Windows Forms application for hiding and extracting messages within images using steganography techniques. It features both **LSB** and **QIM** embedding methods, along with visualization and logging tools for ease of use.
+StegoApollo is a Windows Forms application for hiding and extracting messages within images using multiple steganography algorithms. It provides rich visualization, detailed logging, and an improved user experience, making it suitable for both learning and practical use.
 
 ## Features
 
-* **LSB Embedding/Extraction**: Hide messages in the least significant bits of R/G/B channels.
-* **QIM Embedding/Extraction**: Robust Quantization Index Modulation in the grayscale channel.
-* **Histogram Visualization**: Generate and display the grayscale histogram after processing (QIM only).
-* **Logging Panel**: Real-time display of application actions, warnings, and errors.
-* **Algorithm Explainer**: Interactive pane showing detailed algorithm descriptions for LSB and QIM.
-* **Save Result**: Export the processed image in PNG format.
-* **Progress Indicator**: Visual progress bar during embedding and extraction.
+* **LSB Embedding/Extraction**: Hide messages in the least significant bits of the RGB channels.
+* **QIM Embedding/Extraction**: Quantization Index Modulation in the grayscale channel, robust against noise.
+* **DCT-QIM Embedding/Extraction**: Combines frequency domain (DCT) and QIM, embedding information in mid-frequency coefficients for high concealment and compression resistance.
+* **HistShift (Histogram Shifting) Embedding/Extraction**: Embeds data only in the densest pixel value regions, supporting reversible data hiding.
+* **Histogram Visualization**: Generate and display the R channel histogram at any time, regardless of the algorithm.
+* **Logging Panel**: Real-time display of actions, warnings, errors, and debug information.
+* **Algorithm Explainer**: Interactive window with detailed explanations for all supported algorithms.
+* **Progress Indicator**: Progress bar with fine-grained stage updates during embedding and extraction.
+* **Debug Mode**: Toggleable; when enabled, shows more detailed debug logs for learning and troubleshooting.
+* **Save Result**: Export processed images as PNG files.
+* **Enhanced User Experience**: More intuitive workflow, clearer error messages, and smoother operation.
 
 ## Screenshots
 
-**Initial Screen**:
+**Main Screen**:
 
 ![Screenshot](StegoApolloUI/Screenshots/001.png)
 
-**Embedding Process (With Log Screen and Explanation Screen)**:
+**Embedding Process**:
 
 ![Screenshot](StegoApolloUI/Screenshots/002.png)
 
-**Histogram Visualization**:
+**Histogram Visualization (available for all algorithms)**:
 
 ![Screenshot](StegoApolloUI/Screenshots/003.png)
 
@@ -32,47 +41,67 @@ StegoApollo is a Windows Forms application for hiding and extracting messages wi
 
 ![Screenshot](StegoApolloUI/Screenshots/004.png)
 
+**Full Expandable**:
+
+![Screenshot](StegoApolloUI/Screenshots/005.png)
+
 ## Installation
 
 1. **Clone the repository**:
+	```bash
+	git clone https://github.com/Unforgettableeternalproject/StegoApollo
+	cd StegoApollo
+	```
 
-   ```bash
-   git clone https://github.com/Unforgettableeternalproject/StegoApollo
-   cd StegoApollo
-   ```
 2. **Open the solution**:
+* Open `StegoSolution.sln` in Visual Studio.
 
-   * Launch Visual Studio and open `StegoSolution.sln`.
 3. **Build projects**:
+* Build **StegoLib** (Class Library).
+* Build **StegoApolloUI** (WinForms Application).
 
-   * Build **StegoLib** (Class Library).
-   * Build **StegoApp** (WinForms Application).
 4. **Run the application**:
+* Set `StegoApolloUI` as the startup project and press F5.
 
-   * Set `StegoApp` as the startup project and press F5.
 
 ## Usage
 
---Embedding--
-1. **Select Image**: Choose an image file to embed a message.
-2. **Select Method**: Choose between LSB or QIM for embedding.
-3. **Enter Message**: Type the message you want to hide.
-4. **Start Embedding**: Click the "Embed" button to start the process.
-5. **Save Result**: After embedding, save the processed image.
+### Embedding
 
---Extraction--
-1. **Select Image**: Choose the image file from which you want to extract a message.
-1. **Select Method**: Choose between LSB or QIM for extraction.
-1. **Start Extraction**: Click the "Extract" button to start the process.
-1. **View Message**: The extracted message will be displayed in the text box.
-1. **Save Result**: After extraction, copy the extracted message to clipboard.
+1. **Select Image**: Load the image you want to embed a message into.
+2. **Select Algorithm**: Choose from LSB, QIM, DCT-QIM, or HistShift.
+3. **Enter Message**: Type the message you want to hide.
+4. **Start Embedding**: Click the "Embed" button.
+5. **Save Result**: Save the processed image after embedding.
+
+### Extraction
+
+1. **Select Image**: Load the image you want to extract a message from.
+2. **Select Algorithm**: Choose from LSB, QIM, DCT-QIM, or HistShift.
+3. **Start Extraction**: Click the "Extract" button.
+4. **View Message**: The extracted message will be displayed in the text box.
+5. **Save Result**: Copy the message or save the restored image.
+
+### Other Features
+
+- **Histogram Visualization**: Generate and view the R channel histogram at any time, regardless of the algorithm.
+- **Debug Mode**: Toggle from the menu; when enabled, logs will include more detailed information (e.g., embedding details, coordinates, payload).
+- **Algorithm Explanation**: Click the explanation button to view the principles and pros/cons of each algorithm.
+
+## What's New
+
+- Added **HistShift (Histogram Shifting)** and **DCT-QIM (Frequency Domain Quantization Index Modulation)** algorithms.
+- Progress bar now shows more detailed, stage-based progress.
+- Histogram visualization is now available for all algorithms.
+- Added a "Debug Mode" option for advanced users to track detailed process information.
+- Multiple UI/UX improvements for a smoother and more user-friendly experience.
 
 ## To-Do List
 
-- [ ] Add more visualization options for LSB and QIM.
-- [ ] Implement error handling for unsupported image formats.
-- [ ] Add unit tests for the embedding and extraction algorithms.
-- [ ] Improve the UI/UX for better user experience.
+- [ ] Add more visualization options (e.g., highlight embedding points).
+- [ ] Improve error handling and format support.
+- [ ] Add unit tests for algorithms.
+- [ ] Continue optimizing UI/UX.
 
 ## Contributing
 

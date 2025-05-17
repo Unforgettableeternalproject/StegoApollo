@@ -21,8 +21,10 @@ namespace StegoApolloUI
         private string currentMode = "None";
         private string _inputFilePath = "";
         private string _messageText = "";
+        private string _processingText = "";
         private bool _isTextboxDefault = true;
         private bool _isProcessed = false;
+        private Bitmap originalImage = null;
         private Bitmap processedImage = null;
 
         public MainForm(int maxMessageLength)
@@ -71,7 +73,6 @@ namespace StegoApolloUI
                     btn_eStartAction.Enabled = false;
                     btn_eExport.Enabled = true;
                     btn_dStartAction.Enabled = false;
-                    btn_eHistogram.Enabled = true;
                     MessageBox.Show(currentMode=="Encrypt" ? "圖片已成功處理!" : "已成功萃取文字!", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
@@ -79,7 +80,6 @@ namespace StegoApolloUI
                     btn_eStartAction.Enabled = true;
                     btn_eExport.Enabled = false;
                     btn_dStartAction.Enabled = true;
-                    btn_eHistogram.Enabled = false;
                 }
             }
         }
@@ -89,7 +89,7 @@ namespace StegoApolloUI
 
         private void InitAlgorithmSelector()
         {
-            cBox_AlgoSelect.Items.AddRange(new string[] { "LSB 演算法", "QIM 演算法" }); // 放棄DCT
+            cBox_AlgoSelect.Items.AddRange(new string[] { "LSB 演算法", "QIM 演算法", "DCT-QIM 演算法", "HistShift 演算法" }); // 放棄DCT
             cBox_AlgoSelect.SelectedIndex = 0; // 預設選擇第一個演算法
         }
 
@@ -172,6 +172,9 @@ namespace StegoApolloUI
 
         public virtual void ShowProgress(int percent)
         {
+
+            _processingText = percent == 100 ? "處理完成!" : $"處理中...{percent}%";
+
             // 顯示進度條
             if (currentMode == "Encrypt")
             {
@@ -179,11 +182,12 @@ namespace StegoApolloUI
 
                 if (percent == 0) return;
 
-                if (percent == 100) LogManager.Instance.LogSuccess("藏密完成!");
-                else LogManager.Instance.LogInfo($"進度：{percent}%");
+                if (lbl_eProcessText.Text != _processingText)
+                    if (percent == 100) LogManager.Instance.LogSuccess("藏密完成!");
+                    else if (percent % 25 == 0) LogManager.Instance.LogInfo($"進度：{percent}%");
 
                 lbl_eProcessText.Show();
-                lbl_eProcessText.Text = percent == 100 ? "處理完成!" : $"處理中...{percent}%";
+                lbl_eProcessText.Text = _processingText;
                 lbl_eProcessText.ForeColor = percent == 100 ? Color.SeaGreen : Color.Goldenrod;
             }
             else if (currentMode == "Decrypt")
@@ -191,12 +195,13 @@ namespace StegoApolloUI
                 pBar_dProgress.Value = percent;
 
                 if (percent == 0) return;
-               
-                if (percent == 100) LogManager.Instance.LogSuccess("萃取完成!");
-                else LogManager.Instance.LogInfo($"進度：{percent}%");
+
+                if (lbl_dProcessText.Text != _processingText)
+                    if (percent == 100) LogManager.Instance.LogSuccess("萃取完成!");
+                    else if (percent % 25 == 0) LogManager.Instance.LogInfo($"進度：{percent}%");
 
                 lbl_dProcessText.Show();
-                lbl_dProcessText.Text = percent == 100 ? "處理完成!" : $"處理中...{percent}%";
+                lbl_dProcessText.Text = _processingText;
                 lbl_dProcessText.ForeColor = percent == 100 ? Color.SeaGreen : Color.Goldenrod;
             }
             tprogressBar.Value = percent;
@@ -284,6 +289,7 @@ namespace StegoApolloUI
                 dImageDisplay.Image = bmp;
                 dImageDisplay.BackgroundImage = Properties.Resources.Background;
                 LogManager.Instance.LogInfo($"顯示圖片：{bmp.Width}x{bmp.Height}");
+                if (IsProcessed) processedImage = bmp ?? null;
             }
         }
 
@@ -312,6 +318,7 @@ namespace StegoApolloUI
             }
             LogManager.Instance.LogSuccess("萃取程序結束!");
             rtxtbox_dDecryptText.Text = message;
+            Console.WriteLine(message);
             _isTextboxDefault = false;
         }
 
@@ -333,10 +340,15 @@ namespace StegoApolloUI
                     content = ExplanationContents.QimContent;
                     color = Color.Green;
                     break;
-                case "DCT 演算法": // 這個是 DCT-QIM 的說明，但我放棄這東西了
+                case "DCT-QIM 演算法": // 這個是 DCT-QIM 的說明，但我放棄這東西了
                     title = ExplanationContents.DctTitle;
                     content = ExplanationContents.DctContent;
                     color = Color.DarkCyan;
+                    break;
+                case "HistShift 演算法":
+                    title = ExplanationContents.HSTitle;
+                    content = ExplanationContents.HSContent;
+                    color = Color.OrangeRed;
                     break;
                 default:
                     // 如果沒選或是未知，隱藏窗體就好了
@@ -386,8 +398,32 @@ namespace StegoApolloUI
             DecryptInit();
             InitApp();
             cBox_AlgoSelect.SelectedIndex = 0;
-            LogManager.Instance.LogInfo("使用者進行完全重置。");
+            LogManager.Instance.Clear();
+            if (_logForm != null) ShowLogForm();
+            if (_expForm != null) ShowExplanationForm();
         }
+
+        private void menu_toggleDebugMode_Click(object sender, EventArgs e)
+        {
+            DialogResult r = MessageBox.Show(LogManager.DebugMode ? "是否要關閉除錯模式?" : "切換除錯模式會顯示更多的日誌訊息，是否繼續?", "除錯模式", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (r == DialogResult.No)
+            {
+                return;
+            }
+
+            // 切換 DebugMode 狀態
+            LogManager.DebugMode = !LogManager.DebugMode;
+
+            // 顯示當前狀態
+            string status = LogManager.DebugMode ? "啟用" : "停用";
+            MessageBox.Show($"除錯模式已{status}", "除錯模式切換", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            menu_toggleDebugMode.Text = LogManager.DebugMode ? "除錯模式 (已啟用)" : "除錯模式 (已停用)";
+
+            // 記錄到日誌
+            LogManager.Instance.LogInfo($"除錯模式已{status}");
+        }
+
         private void cBox_AlgoSelect_SelectedIndexChanged(object sender, EventArgs e)
         {
             var prev = cBox_AlgoSelect.SelectedItem?.ToString() ?? "";
@@ -444,6 +480,8 @@ namespace StegoApolloUI
                 panel_eProgressBar.Enabled = true;
                 panel_eTextArea.Enabled = true;
                 IsProcessed = false;
+                originalImage = new Bitmap(fileDialog.FileName);
+                processedImage = null;
                 ShowImage(new Bitmap(fileDialog.FileName));
             }
             else
@@ -559,7 +597,7 @@ namespace StegoApolloUI
         }
         private void btn_eHistogram_Click(object sender, EventArgs e)
         {
-            GenerateHistogram(processedImage);
+            GenerateHistogram();
         }
         #endregion
 
@@ -590,6 +628,8 @@ namespace StegoApolloUI
                 panel_dProgressBar.Enabled = true;
                 panel_dTextArea.Enabled = true;
                 IsProcessed = false;
+                originalImage = new Bitmap(fileDialog.FileName);
+                processedImage = null;
                 ShowImage(new Bitmap(fileDialog.FileName));
             }
             else
@@ -648,6 +688,11 @@ namespace StegoApolloUI
             ShowLogForm();
         }
 
+        private void btn_dHistogram_Click(object sender, EventArgs e)
+        {
+            GenerateHistogram();
+        }
+
         #endregion
 
         #endregion
@@ -655,6 +700,17 @@ namespace StegoApolloUI
         #region Others
         private void DoNothing() { ; }
 
+        public void Invoke(Action action)
+        {
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke(action);
+            }
+            else
+            {
+                action();
+            }
+        }
         private String ShortenFileName(string _fileName)
         {
             if (_fileName.Length > 16)
@@ -706,18 +762,19 @@ namespace StegoApolloUI
             }
         }
 
-        private void GenerateHistogram(Bitmap image)
+        private void GenerateHistogram()
         {
+            Bitmap image = processedImage ?? originalImage;
             LogManager.Instance.LogInfo("正在生成直方圖...");
-            // 1. 前置檢查
-            if (cBox_AlgoSelect.SelectedItem?.ToString() != "QIM 演算法")
-            {
-                MessageBox.Show("只有 QIM 演算法才支援直方圖顯示。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
+            //// 1. 前置檢查
+            //if (cBox_AlgoSelect.SelectedItem?.ToString() != "HistShift 演算法")
+            //{
+            //    MessageBox.Show("只有 HistShift 演算法才支援直方圖顯示。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            //    return;
+            //}
 
             // 2. 計算直方圖
-            int[] hist = HistogramHelper.ComputeGrayHistogram(image);
+            int[] hist = HistogramHelper.ComputeChannelHistogram(image, 'R');
 
             // 3. 產生直方圖 Bitmap
             int histW = 512, histH = 200;
@@ -746,7 +803,7 @@ namespace StegoApolloUI
             // 5. 用新 Form 顯示
             var f = new Form
             {
-                Text = "QIM 直方圖",
+                Text = "圖像空間域直方圖",
                 StartPosition = FormStartPosition.CenterParent,
                 ClientSize = new Size(histW, histH)
             };

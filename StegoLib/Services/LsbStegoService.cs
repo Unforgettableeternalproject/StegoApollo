@@ -2,6 +2,7 @@
 using System.Text;
 using System.Drawing;
 using StegoLib.Models;
+using StegoLib.Utilities;
 
 namespace StegoLib.Services
 {
@@ -16,17 +17,20 @@ namespace StegoLib.Services
                 throw new ArgumentOutOfRangeException(nameof(bitsToUse), "bitsToUse 必須介於 1~2 之間");
 
             _bitsToUse = bitsToUse;
+            LogManager.Instance.LogDebug($"LsbStegoService initialized with bitsToUse = {_bitsToUse}");
         }
 
         public StegoResult Embed(Bitmap coverImage, string message, IProgress<int> progress = null)
         {
             try
             {
-                // 1. 將訊息轉成 bytes(UTF8)
+                LogManager.Instance.LogDebug("Embed method called.");
+                LogManager.Instance.LogDebug($"CoverImage Size: {coverImage.Width}x{coverImage.Height}");
+                LogManager.Instance.LogDebug($"Message Length: {message.Length}");
+
                 byte[] msgBytes = Encoding.UTF8.GetBytes(message);
                 int msgLen = msgBytes.Length;
 
-                // 2. 前置 4 bytes 記錄訊息長度
                 byte[] lengthBytes = BitConverter.GetBytes(msgLen);
                 byte[] payload = new byte[lengthBytes.Length + msgLen];
                 Array.Copy(lengthBytes, payload, lengthBytes.Length);
@@ -35,49 +39,73 @@ namespace StegoLib.Services
                 int totalBits = payload.Length * 8;
                 int capacity = coverImage.Width * coverImage.Height * 3 * _bitsToUse;
 
+                LogManager.Instance.LogDebug($"Payload Length: {payload.Length} bytes, Total Bits: {totalBits}, Capacity: {capacity}");
+
                 if (totalBits > capacity)
-                    return new StegoResult { Success = false, ErrorMessage = "訊息太長，超過圖片容量。" };
-
-                Bitmap resultBmp = new Bitmap(coverImage);
-                int bitIndex = 0;
-
-                for (int y = 0; y < resultBmp.Height && bitIndex < totalBits; y++)
                 {
-                    for (int x = 0; x < resultBmp.Width && bitIndex < totalBits; x++)
-                    {
-                        Color px = resultBmp.GetPixel(x, y);
-                        int[] channels = { px.R, px.G, px.B };
+                    LogManager.Instance.LogDebug("Message too long for the image capacity.");
+                    return new StegoResult { Success = false, ErrorMessage = "訊息太長，超過圖片容量。" };
+                }
 
+                int w = coverImage.Width, h = coverImage.Height;
+                // 1. 前處理：將像素讀入陣列
+                int[,,] rgbMat = new int[h, w, 3];
+                for (int y = 0; y < h; y++)
+                    for (int x = 0; x < w; x++)
+                    {
+                        Color px = coverImage.GetPixel(x, y);
+                        rgbMat[y, x, 0] = px.R;
+                        rgbMat[y, x, 1] = px.G;
+                        rgbMat[y, x, 2] = px.B;
+                        if ((y * w + x) % 1000 == 0)
+                            progress?.Report((int)Math.Round(((y * w + x) * 100.0 / (w * h)) * 0.4));
+                    }
+
+                // 2. 嵌入訊息
+                int bitIndex = 0;
+                for (int y = 0; y < h && bitIndex < totalBits; y++)
+                {
+                    for (int x = 0; x < w && bitIndex < totalBits; x++)
+                    {
                         for (int c = 0; c < 3 && bitIndex < totalBits; c++)
                         {
-                            int newVal = channels[c];
-
+                            int newVal = rgbMat[y, x, c];
                             for (int b = 0; b < _bitsToUse && bitIndex < totalBits; b++)
                             {
                                 int payloadByte = payload[bitIndex / 8];
                                 int payloadBit = (payloadByte >> (7 - (bitIndex % 8))) & 1;
-                                // 清除低階位後加入 payloadBit
                                 newVal = (newVal & ~(1 << b)) | (payloadBit << b);
                                 bitIndex++;
                             }
-
-                            channels[c] = newVal;
+                            rgbMat[y, x, c] = newVal;
                         }
-
-                        Color newPx = Color.FromArgb(px.A, channels[0], channels[1], channels[2]);
-                        resultBmp.SetPixel(x, y, newPx);
+                        if (bitIndex % 100 == 0)
+                            progress?.Report((int)Math.Round(((bitIndex) * 100.0 / totalBits) * 0.4 + 40));
                     }
-
-                    // 更新進度
-                    if (progress != null)
-                        progress.Report((int)(((double)bitIndex / totalBits) * 100));
                 }
 
-                Console.WriteLine($"嵌入完成，總共嵌入 {totalBits} bits 的訊息。");
+                // 3. 寫回像素
+                Bitmap resultBmp = new Bitmap(w, h);
+                for (int y = 0; y < h; y++)
+                    for (int x = 0; x < w; x++)
+                    {
+                        resultBmp.SetPixel(x, y, Color.FromArgb(
+                            255,
+                            rgbMat[y, x, 0],
+                            rgbMat[y, x, 1],
+                            rgbMat[y, x, 2]
+                        ));
+                        if ((y * w + x) % 1000 == 0)
+                            progress?.Report((int)Math.Round(((y * w + x) * 100.0 / (w * h)) * 0.2 + 80));
+                    }
+
+                progress?.Report(100);
+                LogManager.Instance.LogSuccess($"藏密完成，總共嵌入 {totalBits} bits 的訊息。");
                 return new StegoResult { Success = true, Image = resultBmp };
             }
             catch (Exception ex)
             {
+                LogManager.Instance.LogError($"藏密失敗: {ex.Message}");
                 return new StegoResult { Success = false, ErrorMessage = ex.Message };
             }
         }
@@ -86,95 +114,87 @@ namespace StegoLib.Services
         {
             try
             {
-                // 1. 先讀 4 bytes 的長度資訊
-                byte[] lengthBytes = new byte[4];
-                int bitIndex = 0;
+                LogManager.Instance.LogDebug("Extract method called.");
+                LogManager.Instance.LogDebug($"StegoImage Size: {stegoImage.Width}x{stegoImage.Height}");
 
-                // 用位元位址計算像素位置
-                for (int i = 0; i < lengthBytes.Length * 8; i++)
-                {
-                    int pixelIndex = i / (3 * _bitsToUse);
-                    int x = pixelIndex % stegoImage.Width;
-                    int y = pixelIndex / stegoImage.Width;
-
-                    if (y >= stegoImage.Height)
-                        throw new Exception("圖像太小，無法提取完整資訊");
-
-                    Color px = stegoImage.GetPixel(x, y);
-
-                    // 計算目前位元位於哪個通道和位元位置
-                    int channelIndex = (i % (3 * _bitsToUse)) / _bitsToUse;
-                    int bitPosition = i % _bitsToUse;
-
-                    // 取得對應通道
-                    int channelValue = 0;
-                    switch (channelIndex)
+                int w = stegoImage.Width, h = stegoImage.Height;
+                // 1. 前處理：將像素讀入陣列
+                int[,,] rgbMat = new int[h, w, 3];
+                for (int y = 0; y < h; y++)
+                    for (int x = 0; x < w; x++)
                     {
-                        case 0: channelValue = px.R; break;
-                        case 1: channelValue = px.G; break;
-                        case 2: channelValue = px.B; break;
+                        Color px = stegoImage.GetPixel(x, y);
+                        rgbMat[y, x, 0] = px.R;
+                        rgbMat[y, x, 1] = px.G;
+                        rgbMat[y, x, 2] = px.B;
+                        if ((y * w + x) % 1000 == 0)
+                            progress?.Report((int)Math.Round(((y * w + x) * 100.0 / (w * h)) * 0.4));
                     }
 
-                    // 讀取對應位元
+                // 2. 先讀 4 bytes 的長度資訊
+                byte[] lengthBytes = new byte[4];
+                int bitIndex = 0;
+                int totalBitsForLen = lengthBytes.Length * 8;
+                for (int i = 0; i < totalBitsForLen; i++)
+                {
+                    int pixelIndex = i / (3 * _bitsToUse);
+                    int x = pixelIndex % w;
+                    int y = pixelIndex / w;
+                    if (y >= h)
+                        throw new Exception("圖像太小，無法提取完整資訊");
+
+                    int channelIndex = (i % (3 * _bitsToUse)) / _bitsToUse;
+                    int bitPosition = i % _bitsToUse;
+                    int channelValue = rgbMat[y, x, channelIndex];
                     int bit = (channelValue >> bitPosition) & 1;
 
-                    // 將位元寫入對應位置
                     int byteIndex = i / 8;
                     int bitPos = 7 - (i % 8);
                     lengthBytes[byteIndex] |= (byte)(bit << bitPos);
+
+                    if (i % 8 == 0)
+                        progress?.Report((int)Math.Round((i * 100.0 / totalBitsForLen) * 0.2 + 40));
                 }
 
                 int msgLen = BitConverter.ToInt32(lengthBytes, 0);
-                if (msgLen <= 0 || msgLen > (stegoImage.Width * stegoImage.Height * 3 * _bitsToUse - 32) / 8)
+                LogManager.Instance.LogDebug($"Extracted message length: {msgLen}");
+
+                if (msgLen <= 0 || msgLen > (w * h * 3 * _bitsToUse - 32) / 8)
                     throw new Exception($"提取到的訊息長度無效: {msgLen}");
 
+                // 3. 提取訊息內容
                 byte[] msgBytes = new byte[msgLen];
-
-                // 提取訊息內容，從第33個位元開始
-                for (int i = 0; i < msgLen * 8; i++)
+                int totalBits = msgLen * 8;
+                for (int i = 0; i < totalBits; i++)
                 {
-                    int fullBitIndex = i + 32; // 跳過前32位元的長度資訊
+                    int fullBitIndex = i + 32;
                     int pixelIndex = fullBitIndex / (3 * _bitsToUse);
-                    int x = pixelIndex % stegoImage.Width;
-                    int y = pixelIndex / stegoImage.Width;
-
-                    if (y >= stegoImage.Height)
+                    int x = pixelIndex % w;
+                    int y = pixelIndex / w;
+                    if (y >= h)
                         throw new Exception("圖像太小，無法提取完整訊息");
 
-                    Color px = stegoImage.GetPixel(x, y);
-
-                    // 計算目前位元位於哪個通道和位元位置
                     int channelIndex = (fullBitIndex % (3 * _bitsToUse)) / _bitsToUse;
                     int bitPosition = fullBitIndex % _bitsToUse;
-
-                    // 取得對應通道
-                    int channelValue = 0;
-                    switch (channelIndex)
-                    {
-                        case 0: channelValue = px.R; break;
-                        case 1: channelValue = px.G; break;
-                        case 2: channelValue = px.B; break;
-                    }
-
-                    // 讀取對應位元
+                    int channelValue = rgbMat[y, x, channelIndex];
                     int bit = (channelValue >> bitPosition) & 1;
 
-                    // 將位元寫入對應位置
                     int byteIndex = i / 8;
                     int bitPos = 7 - (i % 8);
                     msgBytes[byteIndex] |= (byte)(bit << bitPos);
 
-                    // 更新進度
-                    progress.Report((int)(((double)i / (msgLen * 8)) * 100));
+                    if (i % 100 == 0)
+                        progress?.Report((int)Math.Round((i * 100.0 / totalBits) * 0.1 + 80));
                 }
-                progress.Report(100);
-                string message = Encoding.UTF8.GetString(msgBytes);
+                progress?.Report(100);
 
-                Console.WriteLine($"提取完成，總共提取 {msgLen * 8} bits 的訊息。");
+                string message = Encoding.UTF8.GetString(msgBytes);
+                LogManager.Instance.LogSuccess($"萃取完成，總共提取 {msgLen * 8} bits 的訊息。");
                 return new StegoResult { Success = true, Message = message };
             }
             catch (Exception ex)
             {
+                LogManager.Instance.LogError($"萃取失敗: {ex.Message}");
                 return new StegoResult { Success = false, ErrorMessage = ex.Message };
             }
         }

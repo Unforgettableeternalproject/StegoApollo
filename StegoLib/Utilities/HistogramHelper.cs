@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 
 namespace StegoLib.Utilities
 {
@@ -20,6 +21,27 @@ namespace StegoLib.Utilities
                     hist[gray]++;
                 }
             }
+            return hist;
+        }
+
+        public static int[] ComputeChannelHistogram(Bitmap bmp, char channel)
+        {
+            var hist = new int[256];
+            for (int y = 0; y < bmp.Height; y++)
+                for (int x = 0; x < bmp.Width; x++)
+                {
+                    Color p = bmp.GetPixel(x, y);
+                    int val;
+                    switch (channel)
+                    {
+                        case 'R': val = p.R; break;
+                        case 'G': val = p.G; break;
+                        case 'B': val = p.B; break;
+                        default:
+                            throw new ArgumentException("channel 必須是 'R', 'G' 或 'B'", nameof(channel));
+                    }
+                    hist[val]++;
+                }
             return hist;
         }
     }

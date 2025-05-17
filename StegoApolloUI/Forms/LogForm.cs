@@ -103,6 +103,7 @@ namespace StegoApolloUI.Forms
                 if (line.ToString().Contains("[錯誤]")) rtxtbox_Logs.SelectionColor = Color.Red;
                 else if (line.ToString().Contains("[警告]")) rtxtbox_Logs.SelectionColor = Color.Orange;
                 else if (line.ToString().Contains("[成功]")) rtxtbox_Logs.SelectionColor = Color.Green;
+                else if (line.ToString().Contains("[除錯]")) rtxtbox_Logs.SelectionColor = Color.Purple;
                 else rtxtbox_Logs.SelectionColor = Color.Black;
 
                 rtxtbox_Logs.AppendText(line + "\r\n");

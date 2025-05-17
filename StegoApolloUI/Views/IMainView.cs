@@ -15,6 +15,7 @@ namespace StegoApolloUI.Views
         void ShowError(string message);
         void ShowInfo(string message);
         void ShowExtracted(string message);
+        void Invoke(Action action);
 
         event EventHandler EmbedRequested;
         event EventHandler ExtractRequested;
