@@ -136,6 +136,7 @@ namespace StegoApolloUI
             panel_eTextArea.Enabled = false;
             lbl_ModeTitle.Text = "藏密模式";
             lbl_eProcessText.Hide();
+            tprogressBar.Value = 0;
             ShowProgress(0);
             ShowImage(null);
             LogManager.Instance.LogInfo("已切換至藏密模式!");
@@ -163,6 +164,7 @@ namespace StegoApolloUI
             panel_dTextArea.Enabled = false;
             lbl_ModeTitle.Text = "萃取模式";
             lbl_dProcessText.Hide();
+            tprogressBar.Value = 0;
             ShowProgress(0);
             ShowImage(null);
             LogManager.Instance.LogInfo("已切換至萃取模式!");
@@ -176,8 +178,9 @@ namespace StegoApolloUI
                 pBar_eProgress.Value = percent;
 
                 if (percent == 0) return;
-                if (percent % 25 == 0) LogManager.Instance.LogInfo($"進度：{percent}%");
+
                 if (percent == 100) LogManager.Instance.LogSuccess("藏密完成!");
+                else LogManager.Instance.LogInfo($"進度：{percent}%");
 
                 lbl_eProcessText.Show();
                 lbl_eProcessText.Text = percent == 100 ? "處理完成!" : $"處理中...{percent}%";
@@ -188,8 +191,9 @@ namespace StegoApolloUI
                 pBar_dProgress.Value = percent;
 
                 if (percent == 0) return;
-                if (percent % 25 == 0) LogManager.Instance.LogInfo($"進度：{percent}%");
+               
                 if (percent == 100) LogManager.Instance.LogSuccess("萃取完成!");
+                else LogManager.Instance.LogInfo($"進度：{percent}%");
 
                 lbl_dProcessText.Show();
                 lbl_dProcessText.Text = percent == 100 ? "處理完成!" : $"處理中...{percent}%";
@@ -203,6 +207,7 @@ namespace StegoApolloUI
             if (_logForm == null || _logForm.IsDisposed)
             {
                 btn_eLogDisplay.Text = "隱藏詳細流程";
+                btn_dLogDisplay.Text = "隱藏詳細流程";
                 _logForm = new LogForm();
                 _logForm.FormClosed += (s, args) => { _logForm = null; btn_eLogDisplay.Text = "顯示詳細流程"; };
 
@@ -220,6 +225,7 @@ namespace StegoApolloUI
             else
             {
                 btn_eLogDisplay.Text = "顯示詳細流程";
+                btn_dLogDisplay.Text = "顯示詳細流程";
                 if (_logForm != null && !_logForm.IsDisposed)
                 {
                     _logForm.Close();

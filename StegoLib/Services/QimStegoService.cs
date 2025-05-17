@@ -109,13 +109,11 @@ namespace StegoLib.Services
                 if (candidatePeak == -1)
                     return new StegoResult { Success = false, ErrorMessage = "無法找到候選峰值" };
 
-                // 暫時假設這是峰值，用它來讀取前2個字節的元資料
-                var _peak = candidatePeak;
-
-                // 3. 提取前2個字節的元資料 (peak值和保留值)
-                byte[] metaBytes = new byte[2];
-                int bitIndex = 0;
-                int metaBits = 2 * 8;
+                    Color px = stegoImage.GetPixel(x, y);
+                    int gray = (int)Math.Round(0.299 * px.R + 0.587 * px.G + 0.114 * px.B);
+                    // 判斷灰階值是在偶數格(0)還是奇數格(1)
+                    int mod = gray % _quantStep;
+                    int bit = (mod >= _quantStep / 4 && mod < _quantStep * 3 / 4) ? 1 : 0;
 
                 // 只讀取足夠的像素來獲取元資料
                 for (int y = 0; y < height && bitIndex < metaBits; y++)

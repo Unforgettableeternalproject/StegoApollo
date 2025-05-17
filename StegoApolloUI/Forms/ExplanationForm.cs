@@ -8,11 +8,12 @@ namespace StegoApolloUI.Forms
         public ExplanationForm()
         {
             InitializeComponent();
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             ShowInTaskbar = false;
         }
         public void SetDescription(string title, string content, Color titleColor)
         {
-            rtxtbox_Content.Enabled = true;
             rtxtbox_Content.Clear();
             // 標題
             rtxtbox_Content.SelectionFont = new Font(rtxtbox_Content.Font, FontStyle.Bold);
@@ -22,7 +23,9 @@ namespace StegoApolloUI.Forms
             rtxtbox_Content.SelectionFont = new Font(rtxtbox_Content.Font, FontStyle.Regular);
             rtxtbox_Content.SelectionColor = Color.Black;
             rtxtbox_Content.AppendText(content);
-            rtxtbox_Content.Enabled = false;
+
+            rtxtbox_Content.SelectionStart = 0;
+            rtxtbox_Content.ScrollToCaret();
         }
     }
 }

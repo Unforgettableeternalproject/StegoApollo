@@ -34,7 +34,6 @@
             // 
             // rtxtbox_Content
             // 
-            this.rtxtbox_Content.Enabled = false;
             this.rtxtbox_Content.Font = new System.Drawing.Font("微軟正黑體", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
             this.rtxtbox_Content.Location = new System.Drawing.Point(0, -1);
             this.rtxtbox_Content.Name = "rtxtbox_Content";
