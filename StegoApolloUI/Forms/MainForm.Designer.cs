@@ -32,6 +32,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.menu = new System.Windows.Forms.MenuStrip();
             this.menu_functions = new System.Windows.Forms.ToolStripMenuItem();
+            this.menu_toggleDebugMode = new System.Windows.Forms.ToolStripMenuItem();
             this.menu_reset = new System.Windows.Forms.ToolStripMenuItem();
             this.menu_file = new System.Windows.Forms.ToolStripMenuItem();
             this.menu_open = new System.Windows.Forms.ToolStripMenuItem();
@@ -59,6 +60,7 @@
             this.btn_dBrowse = new System.Windows.Forms.Button();
             this.btn_Encrypt = new System.Windows.Forms.Button();
             this.btn_Decrypt = new System.Windows.Forms.Button();
+            this.btn_dHistogram = new System.Windows.Forms.Button();
             this.panel_Encrypt = new System.Windows.Forms.Panel();
             this.panel_eActions = new System.Windows.Forms.Panel();
             this.panel_eProgressBar = new System.Windows.Forms.Panel();
@@ -96,8 +98,6 @@
             this.cBox_AlgoSelect = new System.Windows.Forms.ComboBox();
             this.lbl_AlgoSelect = new System.Windows.Forms.Label();
             this.btn_Logo = new System.Windows.Forms.Button();
-            this.btn_dHistogram = new System.Windows.Forms.Button();
-            this.menu_toggleDebugMode = new System.Windows.Forms.ToolStripMenuItem();
             this.menu.SuspendLayout();
             this.status.SuspendLayout();
             this.panel_Encrypt.SuspendLayout();
@@ -138,11 +138,19 @@
             this.menu_functions.Size = new System.Drawing.Size(43, 20);
             this.menu_functions.Text = "功能";
             // 
+            // menu_toggleDebugMode
+            // 
+            this.menu_toggleDebugMode.Name = "menu_toggleDebugMode";
+            this.menu_toggleDebugMode.Size = new System.Drawing.Size(169, 22);
+            this.menu_toggleDebugMode.Text = "除錯模式 (已停用)";
+            this.menu_toggleDebugMode.ToolTipText = "切換除錯模式開/關";
+            this.menu_toggleDebugMode.Click += new System.EventHandler(this.menu_toggleDebugMode_Click);
+            // 
             // menu_reset
             // 
             this.menu_reset.ForeColor = System.Drawing.Color.Maroon;
             this.menu_reset.Name = "menu_reset";
-            this.menu_reset.Size = new System.Drawing.Size(180, 22);
+            this.menu_reset.Size = new System.Drawing.Size(169, 22);
             this.menu_reset.Text = "重置所有東西";
             this.menu_reset.Click += new System.EventHandler(this.menu_reset_Click);
             // 
@@ -220,8 +228,8 @@
             this.btn_eHistogram.Name = "btn_eHistogram";
             this.btn_eHistogram.Size = new System.Drawing.Size(90, 37);
             this.btn_eHistogram.TabIndex = 1;
-            this.btn_eHistogram.Text = "顯示直方圖(?)";
-            this.toolTip.SetToolTip(this.btn_eHistogram, "目前只支援HistShift演算法");
+            this.btn_eHistogram.Text = "顯示直方圖";
+            this.toolTip.SetToolTip(this.btn_eHistogram, "顯示圖片的空間域直方圖");
             this.btn_eHistogram.UseVisualStyleBackColor = true;
             this.btn_eHistogram.Click += new System.EventHandler(this.btn_eHistogram_Click);
             // 
@@ -403,6 +411,18 @@
             this.toolTip.SetToolTip(this.btn_Decrypt, "進入萃取模式");
             this.btn_Decrypt.UseVisualStyleBackColor = true;
             this.btn_Decrypt.Click += new System.EventHandler(this.btn_Decrypt_Click);
+            // 
+            // btn_dHistogram
+            // 
+            this.btn_dHistogram.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.btn_dHistogram.Location = new System.Drawing.Point(299, 1);
+            this.btn_dHistogram.Name = "btn_dHistogram";
+            this.btn_dHistogram.Size = new System.Drawing.Size(90, 37);
+            this.btn_dHistogram.TabIndex = 4;
+            this.btn_dHistogram.Text = "顯示直方圖";
+            this.toolTip.SetToolTip(this.btn_dHistogram, "顯示圖片的空間域直方圖");
+            this.btn_dHistogram.UseVisualStyleBackColor = true;
+            this.btn_dHistogram.Click += new System.EventHandler(this.btn_dHistogram_Click);
             // 
             // panel_Encrypt
             // 
@@ -805,26 +825,6 @@
             this.btn_Logo.UseVisualStyleBackColor = false;
             this.btn_Logo.Click += new System.EventHandler(this.btn_Logo_Click);
             // 
-            // btn_dHistogram
-            // 
-            this.btn_dHistogram.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.btn_dHistogram.Location = new System.Drawing.Point(299, 1);
-            this.btn_dHistogram.Name = "btn_dHistogram";
-            this.btn_dHistogram.Size = new System.Drawing.Size(90, 37);
-            this.btn_dHistogram.TabIndex = 4;
-            this.btn_dHistogram.Text = "顯示直方圖(?)";
-            this.toolTip.SetToolTip(this.btn_dHistogram, "目前只支援HistShift演算法");
-            this.btn_dHistogram.UseVisualStyleBackColor = true;
-            this.btn_dHistogram.Click += new System.EventHandler(this.btn_dHistogram_Click);
-            // 
-            // menu_toggleDebugMode
-            // 
-            this.menu_toggleDebugMode.Name = "menu_toggleDebugMode";
-            this.menu_toggleDebugMode.Size = new System.Drawing.Size(180, 22);
-            this.menu_toggleDebugMode.Text = "除錯模式 (已停用)";
-            this.menu_toggleDebugMode.ToolTipText = "切換除錯模式開/關";
-            this.menu_toggleDebugMode.Click += new System.EventHandler(this.menu_toggleDebugMode_Click);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -833,10 +833,10 @@
             this.ClientSize = new System.Drawing.Size(800, 531);
             this.Controls.Add(this.btn_Logo);
             this.Controls.Add(this.panel_Algorithm);
-            this.Controls.Add(this.panel_Decrypt);
             this.Controls.Add(this.panel_Functions);
-            this.Controls.Add(this.panel_Default);
             this.Controls.Add(this.panel_Encrypt);
+            this.Controls.Add(this.panel_Default);
+            this.Controls.Add(this.panel_Decrypt);
             this.Controls.Add(this.status);
             this.Controls.Add(this.menu);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;

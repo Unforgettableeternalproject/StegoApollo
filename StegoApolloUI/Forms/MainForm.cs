@@ -24,6 +24,7 @@ namespace StegoApolloUI
         private string _processingText = "";
         private bool _isTextboxDefault = true;
         private bool _isProcessed = false;
+        private Bitmap originalImage = null;
         private Bitmap processedImage = null;
 
         public MainForm(int maxMessageLength)
@@ -72,8 +73,6 @@ namespace StegoApolloUI
                     btn_eStartAction.Enabled = false;
                     btn_eExport.Enabled = true;
                     btn_dStartAction.Enabled = false;
-                    btn_eHistogram.Enabled = true;
-                    btn_dHistogram.Enabled = true;
                     MessageBox.Show(currentMode=="Encrypt" ? "圖片已成功處理!" : "已成功萃取文字!", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
@@ -81,8 +80,6 @@ namespace StegoApolloUI
                     btn_eStartAction.Enabled = true;
                     btn_eExport.Enabled = false;
                     btn_dStartAction.Enabled = true;
-                    btn_eHistogram.Enabled = false;
-                    btn_dHistogram.Enabled = false;
                 }
             }
         }
@@ -483,6 +480,8 @@ namespace StegoApolloUI
                 panel_eProgressBar.Enabled = true;
                 panel_eTextArea.Enabled = true;
                 IsProcessed = false;
+                originalImage = new Bitmap(fileDialog.FileName);
+                processedImage = null;
                 ShowImage(new Bitmap(fileDialog.FileName));
             }
             else
@@ -598,7 +597,7 @@ namespace StegoApolloUI
         }
         private void btn_eHistogram_Click(object sender, EventArgs e)
         {
-            GenerateHistogram(processedImage);
+            GenerateHistogram();
         }
         #endregion
 
@@ -629,6 +628,8 @@ namespace StegoApolloUI
                 panel_dProgressBar.Enabled = true;
                 panel_dTextArea.Enabled = true;
                 IsProcessed = false;
+                originalImage = new Bitmap(fileDialog.FileName);
+                processedImage = null;
                 ShowImage(new Bitmap(fileDialog.FileName));
             }
             else
@@ -689,7 +690,7 @@ namespace StegoApolloUI
 
         private void btn_dHistogram_Click(object sender, EventArgs e)
         {
-            GenerateHistogram(processedImage);
+            GenerateHistogram();
         }
 
         #endregion
@@ -761,15 +762,16 @@ namespace StegoApolloUI
             }
         }
 
-        private void GenerateHistogram(Bitmap image)
+        private void GenerateHistogram()
         {
+            Bitmap image = processedImage ?? originalImage;
             LogManager.Instance.LogInfo("正在生成直方圖...");
-            // 1. 前置檢查
-            if (cBox_AlgoSelect.SelectedItem?.ToString() != "HistShift 演算法")
-            {
-                MessageBox.Show("只有 HistShift 演算法才支援直方圖顯示。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
+            //// 1. 前置檢查
+            //if (cBox_AlgoSelect.SelectedItem?.ToString() != "HistShift 演算法")
+            //{
+            //    MessageBox.Show("只有 HistShift 演算法才支援直方圖顯示。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            //    return;
+            //}
 
             // 2. 計算直方圖
             int[] hist = HistogramHelper.ComputeChannelHistogram(image, 'R');
@@ -801,7 +803,7 @@ namespace StegoApolloUI
             // 5. 用新 Form 顯示
             var f = new Form
             {
-                Text = "QIM 直方圖",
+                Text = "圖像空間域直方圖",
                 StartPosition = FormStartPosition.CenterParent,
                 ClientSize = new Size(histW, histH)
             };
